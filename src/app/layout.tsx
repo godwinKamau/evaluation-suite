@@ -13,7 +13,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="min-h-screen antialiased">{children}</body>
+      <body className="min-h-screen bg-win95-desktop p-4 font-win95 text-[11px] antialiased">
+        {children}
+      </body>
     </html>
   );
 }

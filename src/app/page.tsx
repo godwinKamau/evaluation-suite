@@ -6,6 +6,9 @@ import { ModelSelector } from "@/components/ModelSelector";
 import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { ResultsTable } from "@/components/ResultsTable";
 import { SystemPromptEditor } from "@/components/SystemPromptEditor";
+import { Win95Button } from "@/components/win95/Button";
+import { Win95Input, Win95Textarea } from "@/components/win95/Input";
+import { Win95Window } from "@/components/win95/Window";
 import { buildEvaluatorSystemPrompt } from "@/lib/evaluator-prompt";
 import { EVAL_DATASET } from "@/lib/dataset";
 import type {
@@ -222,156 +225,159 @@ export default function HomePage() {
 
   const metricList = Array.from(activeMetrics);
 
+  const panelClass =
+    "win95-raised flex flex-col gap-3 bg-win95-grey p-3";
+
   return (
-    <main className="mx-auto min-h-screen max-w-6xl px-4 py-10">
-      <header className="mb-10 border-b border-[#2f3336] pb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-[#e7e9ea]">
-          LLM Evaluation Suite
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm text-[#71767b]">
+    <main>
+      <Win95Window title="LLM Evaluation Suite">
+        <p className="mb-4 max-w-2xl text-[11px] text-black">
           Configure a test model and an LLM-as-judge, run on {EVAL_DATASET.length}{" "}
           fixed examples, then upload results to LangSmith.
         </p>
-      </header>
 
-      <div className="grid gap-8 lg:grid-cols-2">
-        <section className="flex flex-col gap-4 rounded-xl border border-[#2f3336] bg-[#16181c]/50 p-5">
-          <h2 className="text-lg font-medium text-[#e7e9ea]">Test model</h2>
-          <ModelSelector
-            id="test-model"
-            label="Model under test"
-            models={models}
-            value={testModel}
-            onChange={setTestModel}
-            loading={modelsLoading}
-            error={modelsError}
-            disabled={running}
-          />
-          <SystemPromptEditor
-            id="test-prompt"
-            label="System prompt"
-            value={testSystemPrompt}
-            onChange={setTestSystemPrompt}
-            disabled={running}
-            hint="Applied to the test model for every dataset question."
-          />
-        </section>
-
-        <section className="flex flex-col gap-4 rounded-xl border border-[#2f3336] bg-[#16181c]/50 p-5">
-          <h2 className="text-lg font-medium text-[#e7e9ea]">
-            Evaluator (judge)
-          </h2>
-          <ModelSelector
-            id="eval-model"
-            label="Judge model"
-            models={models}
-            value={evaluatorModel}
-            onChange={setEvaluatorModel}
-            loading={modelsLoading}
-            error={modelsError}
-            disabled={running}
-          />
-          <SystemPromptEditor
-            id="eval-base"
-            label="Evaluator base instructions"
-            value={evaluatorBasePrompt}
-            onChange={setEvaluatorBasePrompt}
-            disabled={running}
-            rows={4}
-            hint="Criteria below are appended automatically with pass/fail at 70%."
-          />
-          <MetricsCheckboxMenu
-            activeMetrics={activeMetrics}
-            onToggle={toggleMetric}
-            disabled={running}
-          />
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-[#e7e9ea]">
-              Full evaluator system prompt (live preview)
-            </label>
-            <textarea
-              readOnly
-              rows={12}
-              className="resize-y rounded-lg border border-dashed border-[#2f3336] bg-[#0f1419] px-3 py-2 font-mono text-xs leading-relaxed text-[#a8b0b7]"
-              value={fullEvaluatorPrompt}
+        <div className="grid gap-4 lg:grid-cols-2">
+          <section className={panelClass}>
+            <h2 className="font-win95 text-[11px] font-bold text-black">
+              Test model
+            </h2>
+            <ModelSelector
+              id="test-model"
+              label="Model under test"
+              models={models}
+              value={testModel}
+              onChange={setTestModel}
+              loading={modelsLoading}
+              error={modelsError}
+              disabled={running}
             />
-          </div>
-        </section>
-      </div>
+            <SystemPromptEditor
+              id="test-prompt"
+              label="System prompt"
+              value={testSystemPrompt}
+              onChange={setTestSystemPrompt}
+              disabled={running}
+              hint="Applied to the test model for every dataset question."
+            />
+          </section>
 
-      <section className="mt-8 flex flex-col gap-4 rounded-xl border border-[#2f3336] bg-[#16181c]/50 p-5">
-        <h2 className="text-lg font-medium text-[#e7e9ea]">Run</h2>
-        <ProgressIndicator
-          current={progress}
-          total={EVAL_DATASET.length}
-          active={running}
-        />
-        {runError ? (
-          <p className="rounded-lg border border-red-900/80 bg-red-950/40 px-3 py-2 text-sm text-red-300">
-            {runError}
-          </p>
-        ) : null}
-        <div className="flex flex-wrap items-end gap-4">
-          <button
-            type="button"
-            onClick={runEvaluation}
-            disabled={running || modelsLoading}
-            className="rounded-lg bg-[#1d9bf0] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#1a8cd8] disabled:opacity-50"
-          >
-            {running ? "Running…" : "Run evaluation"}
-          </button>
-        </div>
-      </section>
-
-      {results.length > 0 ? (
-        <section className="mt-10 flex flex-col gap-4">
-          <h2 className="text-lg font-medium text-[#e7e9ea]">Results</h2>
-          <ResultsTable results={results} activeMetrics={metricList} />
-
-          <div className="rounded-xl border border-[#2f3336] bg-[#16181c]/50 p-5">
-            <h3 className="mb-3 text-base font-medium text-[#e7e9ea]">
-              LangSmith upload
-            </h3>
-            <p className="mb-3 text-xs text-[#71767b]">
-              Creates a dataset, an experiment project linked to it, one run per
-              row, and feedback scores per metric. Requires{" "}
-              <code className="text-[#a8b0b7]">LANGSMITH_API_KEY</code> on the
-              server.
-            </p>
-            <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end">
-              <div className="flex flex-1 flex-col gap-1">
-                <label
-                  htmlFor="exp-name"
-                  className="text-sm font-medium text-[#e7e9ea]"
-                >
-                  Experiment name
-                </label>
-                <input
-                  id="exp-name"
-                  className="rounded-lg border border-[#2f3336] bg-[#16181c] px-3 py-2 text-sm text-[#e7e9ea] outline-none focus:border-[#1d9bf0]"
-                  value={experimentName}
-                  onChange={(e) => setExperimentName(e.target.value)}
-                  disabled={uploading}
-                />
-              </div>
-              <button
-                type="button"
-                onClick={uploadToLangSmith}
-                disabled={uploading}
-                className="rounded-lg border border-[#2f3336] bg-[#0f1419] px-4 py-2 text-sm font-medium text-[#e7e9ea] hover:border-[#1d9bf0] disabled:opacity-50"
-              >
-                {uploading ? "Uploading…" : "Upload to LangSmith"}
-              </button>
+          <section className={panelClass}>
+            <h2 className="font-win95 text-[11px] font-bold text-black">
+              Evaluator (judge)
+            </h2>
+            <ModelSelector
+              id="eval-model"
+              label="Judge model"
+              models={models}
+              value={evaluatorModel}
+              onChange={setEvaluatorModel}
+              loading={modelsLoading}
+              error={modelsError}
+              disabled={running}
+            />
+            <SystemPromptEditor
+              id="eval-base"
+              label="Evaluator base instructions"
+              value={evaluatorBasePrompt}
+              onChange={setEvaluatorBasePrompt}
+              disabled={running}
+              rows={4}
+              hint="Criteria below are appended automatically with pass/fail at 70%."
+            />
+            <MetricsCheckboxMenu
+              activeMetrics={activeMetrics}
+              onToggle={toggleMetric}
+              disabled={running}
+            />
+            <div className="flex flex-col gap-1">
+              <span className="font-win95 text-[11px] font-bold text-black">
+                Full evaluator system prompt (live preview)
+              </span>
+              <Win95Textarea
+                readOnly
+                rows={12}
+                className="font-mono text-[11px] leading-relaxed text-black"
+                value={fullEvaluatorPrompt}
+              />
             </div>
-            {uploadError ? (
-              <p className="text-sm text-red-400">{uploadError}</p>
-            ) : null}
-            {uploadSuccess ? (
-              <p className="text-sm text-emerald-400">{uploadSuccess}</p>
-            ) : null}
+          </section>
+        </div>
+
+        <section className={`mt-4 ${panelClass}`}>
+          <h2 className="font-win95 text-[11px] font-bold text-black">Run</h2>
+          <ProgressIndicator
+            current={progress}
+            total={EVAL_DATASET.length}
+            active={running}
+          />
+          {runError ? (
+            <p
+              className="win95-sunken bg-white p-2 font-win95 text-[11px] text-black"
+              role="alert"
+            >
+              {runError}
+            </p>
+          ) : null}
+          <div className="flex flex-wrap items-end gap-2">
+            <Win95Button
+              variant="preferred"
+              onClick={runEvaluation}
+              disabled={running || modelsLoading}
+            >
+              {running ? "Running…" : "Run evaluation"}
+            </Win95Button>
           </div>
         </section>
-      ) : null}
+
+        {results.length > 0 ? (
+          <section className="mt-4 flex flex-col gap-4">
+            <h2 className="font-win95 text-[11px] font-bold text-black">
+              Results
+            </h2>
+            <ResultsTable results={results} activeMetrics={metricList} />
+
+            <div className={panelClass}>
+              <h3 className="font-win95 text-[11px] font-bold text-black">
+                LangSmith upload
+              </h3>
+              <p className="text-[11px] text-win95-dark-grey">
+                Creates a dataset, an experiment project linked to it, one run
+                per row, and feedback scores per metric. Requires{" "}
+                <code className="font-mono text-black">LANGSMITH_API_KEY</code>{" "}
+                on the server.
+              </p>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                <div className="flex flex-1 flex-col gap-1">
+                  <label
+                    htmlFor="exp-name"
+                    className="font-win95 text-[11px] font-bold text-black"
+                  >
+                    Experiment name
+                  </label>
+                  <Win95Input
+                    id="exp-name"
+                    value={experimentName}
+                    onChange={(e) => setExperimentName(e.target.value)}
+                    disabled={uploading}
+                  />
+                </div>
+                <Win95Button
+                  onClick={uploadToLangSmith}
+                  disabled={uploading}
+                >
+                  {uploading ? "Uploading…" : "Upload to LangSmith"}
+                </Win95Button>
+              </div>
+              {uploadError ? (
+                <p className="font-win95 text-[11px] text-black">{uploadError}</p>
+              ) : null}
+              {uploadSuccess ? (
+                <p className="font-win95 text-[11px] text-black">{uploadSuccess}</p>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
+      </Win95Window>
     </main>
   );
 }

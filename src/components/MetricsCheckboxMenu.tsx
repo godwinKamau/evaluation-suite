@@ -1,5 +1,6 @@
 "use client";
 
+import { Win95Checkbox } from "@/components/win95/Checkbox";
 import { ALL_METRIC_KEYS, METRIC_LABELS, type MetricKey } from "@/types";
 
 type Props = {
@@ -21,27 +22,25 @@ export function MetricsCheckboxMenu({
   return (
     <fieldset
       disabled={disabled}
-      className="rounded-lg border border-[#2f3336] bg-[#16181c] p-3"
+      className="win95-sunken bg-win95-grey p-2"
     >
-      <legend className="px-1 text-sm font-medium text-[#e7e9ea]">
+      <legend className="px-1 font-win95 text-[11px] font-bold text-black">
         Evaluation criteria
       </legend>
-      <p className="mb-2 text-xs text-[#71767b]">
+      <p className="mb-2 text-[11px] text-win95-dark-grey">
         Toggle criteria to include in the evaluator system prompt. Pass threshold:{" "}
         ≥70%.
       </p>
-      <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <ul className="grid grid-cols-1 gap-1 sm:grid-cols-2">
         {ALL_METRIC_KEYS.map((key) => (
           <li key={key}>
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-[#e7e9ea]">
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded border-[#2f3336] bg-[#0f1419] text-[#1d9bf0] focus:ring-[#1d9bf0]"
-                checked={set.has(key)}
-                onChange={() => onToggle(key)}
-              />
+            <Win95Checkbox
+              checked={set.has(key)}
+              onChange={() => onToggle(key)}
+              disabled={disabled}
+            >
               {METRIC_LABELS[key]}
-            </label>
+            </Win95Checkbox>
           </li>
         ))}
       </ul>

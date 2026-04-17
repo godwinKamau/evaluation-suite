@@ -15,70 +15,75 @@ type Props = {
 export function ResultsTable({ results, activeMetrics }: Props) {
   if (results.length === 0) return null;
 
+  const cellSunken =
+    "border border-black border-t-white border-l-white border-b-win95-shadow border-r-win95-shadow bg-win95-input p-2 align-top font-win95 text-[11px] leading-snug text-black";
+
+  const thClass =
+    "border border-black border-t-white border-l-white border-b-win95-shadow border-r-win95-shadow bg-win95-grey p-2 text-left font-win95 text-[11px] font-bold text-black";
+
   return (
-    <div className="overflow-x-auto rounded-lg border border-[#2f3336]">
-      <table className="w-full min-w-[720px] border-collapse text-left text-sm">
+    <div className="win95-sunken max-w-full overflow-x-auto bg-win95-grey p-1">
+      <table className="w-full min-w-[720px] border-collapse">
         <thead>
-          <tr className="border-b border-[#2f3336] bg-[#16181c]">
-            <th className="p-3 font-semibold text-[#e7e9ea]">#</th>
-            <th className="p-3 font-semibold text-[#e7e9ea]">Question</th>
-            <th className="p-3 font-semibold text-[#e7e9ea]">Model answer</th>
-            <th className="p-3 font-semibold text-[#e7e9ea]">Expected</th>
+          <tr>
+            <th className={thClass}>#</th>
+            <th className={thClass}>Question</th>
+            <th className={thClass}>Model answer</th>
+            <th className={thClass}>Expected</th>
             {activeMetrics.map((k) => (
-              <th key={k} className="p-3 font-semibold text-[#e7e9ea]">
+              <th key={k} className={thClass}>
                 {METRIC_LABELS[k]}
               </th>
             ))}
-            <th className="p-3 font-semibold text-[#e7e9ea]">Status</th>
+            <th className={thClass}>Status</th>
           </tr>
         </thead>
         <tbody>
           {results.map((r) => (
-            <tr
-              key={r.index}
-              className="border-b border-[#2f3336] align-top hover:bg-[#16181c]/80"
-            >
-              <td className="p-3 text-[#71767b]">{r.index + 1}</td>
-              <td className="max-w-xs p-3 text-[#e7e9ea]">{r.input}</td>
-              <td className="max-w-xs p-3 text-[#e7e9ea]">
+            <tr key={r.index}>
+              <td className={`${cellSunken} text-win95-dark-grey`}>
+                {r.index + 1}
+              </td>
+              <td className={`${cellSunken} max-w-xs`}>{r.input}</td>
+              <td className={`${cellSunken} max-w-xs`}>
                 {r.error ? (
-                  <span className="text-red-400">{r.error}</span>
+                  <span className="text-black underline">{r.error}</span>
                 ) : (
                   r.actual_output
                 )}
               </td>
-              <td className="max-w-xs p-3 text-[#71767b]">
+              <td className={`${cellSunken} max-w-xs text-win95-dark-grey`}>
                 {r.expected_output}
               </td>
               {activeMetrics.map((k) => {
                 const m = r.metrics[k];
                 if (!m) {
                   return (
-                    <td key={k} className="p-3 text-[#71767b]">
+                    <td key={k} className={cellSunken}>
                       —
                     </td>
                   );
                 }
                 const pass = m.score >= PASS_THRESHOLD_PERCENT;
                 return (
-                  <td key={k} className="p-3">
+                  <td key={k} className={cellSunken}>
                     <span
-                      className={`inline-flex flex-col gap-0.5 rounded px-2 py-1 text-xs font-medium ${
+                      className={`inline-flex flex-col gap-0.5 border border-black px-1 py-0.5 font-win95 text-[10px] ${
                         pass
-                          ? "bg-emerald-950/80 text-emerald-300"
-                          : "bg-red-950/80 text-red-300"
+                          ? "bg-[#c0dcc0] text-black"
+                          : "bg-[#ffc0c0] text-black"
                       }`}
                       title={m.reasoning}
                     >
                       {m.score}%
-                      <span className="text-[10px] opacity-90">
+                      <span className="text-[9px] opacity-90">
                         {pass ? "PASS" : "FAIL"}
                       </span>
                     </span>
                   </td>
                 );
               })}
-              <td className="p-3 text-xs text-[#71767b]">
+              <td className={`${cellSunken} text-win95-dark-grey`}>
                 {r.error ? "Error" : "OK"}
               </td>
             </tr>

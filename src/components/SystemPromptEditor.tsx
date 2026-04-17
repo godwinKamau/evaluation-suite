@@ -1,5 +1,7 @@
 "use client";
 
+import { Win95Textarea } from "@/components/win95/Input";
+
 type Props = {
   id: string;
   label: string;
@@ -20,19 +22,19 @@ export function SystemPromptEditor({
   hint,
 }: Props) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium text-[#e7e9ea]">
+    <div className="flex flex-col gap-1">
+      <label htmlFor={id} className="font-win95 text-[11px] font-bold text-black">
         {label}
       </label>
-      {hint ? <p className="text-xs text-[#71767b]">{hint}</p> : null}
-      <textarea
+      {hint ? <p className="text-[11px] text-win95-dark-grey">{hint}</p> : null}
+      <Win95Textarea
         id={id}
         rows={rows}
-        className="resize-y rounded-lg border border-[#2f3336] bg-[#16181c] px-3 py-2 font-mono text-sm leading-relaxed text-[#e7e9ea] outline-none focus:border-[#1d9bf0] disabled:opacity-50"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
         spellCheck={false}
+        className="font-mono"
       />
     </div>
   );
