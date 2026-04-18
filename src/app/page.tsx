@@ -1,17 +1,25 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { DatasetEditor } from "@/components/DatasetEditor";
 import { MetricsCheckboxMenu } from "@/components/MetricsCheckboxMenu";
 import { ModelSelector } from "@/components/ModelSelector";
 import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { ResultsTable } from "@/components/ResultsTable";
 import { SystemPromptEditor } from "@/components/SystemPromptEditor";
+import {
+  TemplateSelector,
+  type TemplateSelection,
+} from "@/components/TemplateSelector";
 import { Win95Button } from "@/components/win95/Button";
 import { Win95Input, Win95Textarea } from "@/components/win95/Input";
 import { Win95Window } from "@/components/win95/Window";
-import { buildEvaluatorSystemPrompt } from "@/lib/evaluator-prompt";
+import { BUSINESS_TEMPLATES } from "@/lib/business-templates";
 import { EVAL_DATASET } from "@/lib/dataset";
+import { buildEvaluatorSystemPrompt } from "@/lib/evaluator-prompt";
+import { composeTestSystemPrompt } from "@/lib/test-injections";
 import type {
+  EvalItem,
   EvalResult,
   MetricKey,
   OpenRouterModelOption,
@@ -29,7 +37,12 @@ export default function HomePage() {
 
   const [testModel, setTestModel] = useState("");
   const [evaluatorModel, setEvaluatorModel] = useState("");
-  const [testSystemPrompt, setTestSystemPrompt] = useState(DEFAULT_TEST_PROMPT);
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<TemplateSelection>("custom");
+  const [testBasePrompt, setTestBasePrompt] = useState(DEFAULT_TEST_PROMPT);
+  const [dataset, setDataset] = useState<EvalItem[]>(() =>
+    EVAL_DATASET.map((row) => ({ ...row })),
+  );
   const [evaluatorBasePrompt, setEvaluatorBasePrompt] =
     useState(DEFAULT_EVALUATOR_BASE);
 
@@ -64,6 +77,23 @@ export default function HomePage() {
       ),
     [evaluatorBasePrompt, activeMetrics],
   );
+
+  const effectiveTestPrompt = useMemo(
+    () => composeTestSystemPrompt(testBasePrompt, Array.from(activeMetrics)),
+    [testBasePrompt, activeMetrics],
+  );
+
+  const handleTemplateChange = useCallback((value: TemplateSelection) => {
+    setSelectedTemplate(value);
+    if (value === "custom") {
+      setTestBasePrompt(DEFAULT_TEST_PROMPT);
+      setDataset(EVAL_DATASET.map((row) => ({ ...row })));
+    } else {
+      const t = BUSINESS_TEMPLATES[value];
+      setTestBasePrompt(t.basePrompt);
+      setDataset(t.samples.map((row) => ({ ...row })));
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -132,6 +162,17 @@ export default function HomePage() {
       setRunError("Select at least one evaluation metric.");
       return;
     }
+    if (dataset.length === 0) {
+      setRunError("Add at least one row to the test dataset.");
+      return;
+    }
+    const invalidRow = dataset.findIndex((row) => !row.input.trim());
+    if (invalidRow !== -1) {
+      setRunError(
+        `Dataset row ${invalidRow + 1}: user prompt (input) cannot be empty.`,
+      );
+      return;
+    }
 
     setRunning(true);
 
@@ -141,10 +182,11 @@ export default function HomePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           testModel,
-          testSystemPrompt,
+          testSystemPrompt: effectiveTestPrompt,
           evaluatorModel,
           evaluatorBasePrompt,
           activeMetrics: Array.from(activeMetrics),
+          dataset,
         }),
       });
 
@@ -232,8 +274,8 @@ export default function HomePage() {
     <main>
       <Win95Window title="LLM Evaluation Suite">
         <p className="mb-4 max-w-2xl text-[11px] text-black">
-          Configure a test model and an LLM-as-judge, run on {EVAL_DATASET.length}{" "}
-          fixed examples, then upload results to LangSmith.
+          Configure a test model and an LLM-as-judge, run on {dataset.length}{" "}
+          dataset row(s), then upload results to LangSmith.
         </p>
 
         <div className="grid gap-4 lg:grid-cols-2">
@@ -251,14 +293,31 @@ export default function HomePage() {
               error={modelsError}
               disabled={running}
             />
+            <TemplateSelector
+              value={selectedTemplate}
+              onChange={handleTemplateChange}
+              disabled={running}
+            />
             <SystemPromptEditor
               id="test-prompt"
-              label="System prompt"
-              value={testSystemPrompt}
-              onChange={setTestSystemPrompt}
+              label="Base system prompt"
+              value={testBasePrompt}
+              onChange={setTestBasePrompt}
               disabled={running}
-              hint="Applied to the test model for every dataset question."
+              rows={8}
+              hint="Edit the base instructions. Evaluation criteria (right panel) append constraints under // Active Evaluation Constraints: in the preview below."
             />
+            <div className="flex flex-col gap-1">
+              <span className="font-win95 text-[11px] font-bold text-black">
+                Effective test system prompt (live preview)
+              </span>
+              <Win95Textarea
+                readOnly
+                rows={12}
+                className="font-mono text-[11px] leading-relaxed text-black"
+                value={effectiveTestPrompt}
+              />
+            </div>
           </section>
 
           <section className={panelClass}>
@@ -304,10 +363,18 @@ export default function HomePage() {
         </div>
 
         <section className={`mt-4 ${panelClass}`}>
+          <DatasetEditor
+            items={dataset}
+            onChange={setDataset}
+            disabled={running}
+          />
+        </section>
+
+        <section className={`mt-4 ${panelClass}`}>
           <h2 className="font-win95 text-[11px] font-bold text-black">Run</h2>
           <ProgressIndicator
             current={progress}
-            total={EVAL_DATASET.length}
+            total={dataset.length}
             active={running}
           />
           {runError ? (

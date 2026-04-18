@@ -28,7 +28,8 @@ export function MetricsCheckboxMenu({
         Evaluation criteria
       </legend>
       <p className="mb-2 text-[11px] text-win95-dark-grey">
-        Toggle criteria to include in the evaluator system prompt. Pass threshold:{" "}
+        Toggle criteria for the judge prompt and for test-model instruction
+        injections (see Test model → effective prompt preview). Pass threshold:{" "}
         ≥70%.
       </p>
       <ul className="grid grid-cols-1 gap-1 sm:grid-cols-2">
