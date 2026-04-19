@@ -1,5 +1,4 @@
 import { OpenRouter } from "@openrouter/agent";
-import { EVAL_DATASET } from "@/lib/dataset";
 import { buildEvaluatorSystemPrompt, buildJudgeUserMessage } from "@/lib/evaluator-prompt";
 import { parseJudgeResponse, validateParsedMetrics } from "@/lib/parse-judge";
 import type { EvaluateRequestBody, EvalResult, MetricKey, SSEEvent } from "@/types";
@@ -37,6 +36,7 @@ export async function POST(request: Request) {
     evaluatorModel,
     evaluatorBasePrompt,
     activeMetrics,
+    dataset,
   } = body;
 
   if (!testModel?.trim() || !evaluatorModel?.trim()) {
@@ -53,6 +53,30 @@ export async function POST(request: Request) {
     );
   }
 
+  if (!Array.isArray(dataset) || dataset.length === 0) {
+    return new Response(
+      JSON.stringify({ error: "dataset must be a non-empty array." }),
+      { status: 400, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  for (let i = 0; i < dataset.length; i++) {
+    const row = dataset[i];
+    if (
+      !row ||
+      typeof row.input !== "string" ||
+      !row.input.trim() ||
+      typeof row.expected_output !== "string"
+    ) {
+      return new Response(
+        JSON.stringify({
+          error: `dataset[${i}] must have non-empty input and string expected_output.`,
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
+      );
+    }
+  }
+
   const metrics = activeMetrics as MetricKey[];
   const openrouter = new OpenRouter({ apiKey });
   const judgeInstructions = buildEvaluatorSystemPrompt(
@@ -66,9 +90,9 @@ export async function POST(request: Request) {
       const results: EvalResult[] = [];
 
       try {
-        const total = EVAL_DATASET.length;
+        const total = dataset.length;
         for (let i = 0; i < total; i++) {
-          const item = EVAL_DATASET[i];
+          const item = dataset[i];
           let actual_output = "";
           let error: string | undefined;
 

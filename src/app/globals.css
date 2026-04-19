@@ -2,22 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "W95FA";
+  src: url("/fonts/W95FA.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  --background: #0f1419;
-  --foreground: #e7e9ea;
-  --card: #16181c;
-  --border: #2f3336;
-  --muted: #71767b;
-  --accent: #1d9bf0;
+  --win95-desktop: #008080;
+  --win95-grey: #c0c0c0;
+  --win95-navy: #000080;
+  --win95-black: #000000;
+  --win95-white: #ffffff;
+  --win95-dark-grey: #808080;
+  --win95-light-grey: #dfdfdf;
+  --win95-shadow-dark: #7f7f7f;
+  --win95-input-bg: #ffffff;
+  --win95-focus-blue: #000080;
+  --win95-progress-blue: #0000a8;
+  --background: var(--win95-desktop);
+  --foreground: var(--win95-black);
+  --card: var(--win95-grey);
+  --border: var(--win95-black);
+  --muted: var(--win95-dark-grey);
+  --accent: var(--win95-navy);
+}
+
+/* Win95 raised (outset) border — buttons, panels */
+.win95-raised {
+  box-shadow:
+    inset -1px -1px 0 0 #000000,
+    inset 1px 1px 0 0 #ffffff,
+    inset -2px -2px 0 0 #7f7f7f,
+    inset 2px 2px 0 0 #dfdfdf;
+}
+
+/* Win95 sunken (inset) border — inputs, group boxes */
+.win95-sunken {
+  box-shadow:
+    inset -1px -1px 0 0 #ffffff,
+    inset 1px 1px 0 0 #000000,
+    inset -2px -2px 0 0 #dfdfdf,
+    inset 2px 2px 0 0 #7f7f7f;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family:
-    system-ui,
-    -apple-system,
-    Segoe UI,
-    Roboto,
-    sans-serif;
+  font-family: "W95FA", "MS Sans Serif", Tahoma, sans-serif;
+  font-size: 12px;
+  line-height: 1.2;
 }

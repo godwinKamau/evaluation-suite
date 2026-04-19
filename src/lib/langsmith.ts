@@ -1,6 +1,5 @@
 import { Client } from "langsmith";
 import { randomUUID } from "crypto";
-import { EVAL_DATASET } from "@/lib/dataset";
 import type { EvalResult, MetricKey } from "@/types";
 
 function getLangSmithClient(): Client {
@@ -41,7 +40,7 @@ export async function uploadExperimentToLangSmith(options: {
     dataType: "kv",
   });
 
-  const exampleCreates = EVAL_DATASET.map((row, i) => ({
+  const exampleCreates = results.map((row, i) => ({
     dataset_id: dataset.id,
     inputs: { input: row.input },
     outputs: { expected_output: row.expected_output },

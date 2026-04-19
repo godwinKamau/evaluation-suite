@@ -1,3 +1,6 @@
+/** Pre-built business profile for test system prompt + sample dataset */
+export type TemplateKey = "support" | "marketing" | "sales" | "legal";
+
 /** Keys used in evaluator JSON and UI */
 export type MetricKey =
   | "accuracy"
@@ -64,6 +67,7 @@ export type EvaluateRequestBody = {
   evaluatorModel: string;
   evaluatorBasePrompt: string;
   activeMetrics: MetricKey[];
+  dataset: EvalItem[];
 };
 
 export type UploadRequestBody = {

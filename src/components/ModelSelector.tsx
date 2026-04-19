@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Win95Input } from "@/components/win95/Input";
+import { Win95Select } from "@/components/win95/Select";
 import type { OpenRouterModelOption } from "@/types";
 
 type Props = {
@@ -42,23 +44,21 @@ export function ModelSelector({
   const searchId = `${id}-search`;
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium text-[#e7e9ea]">
+    <div className="flex flex-col gap-1">
+      <label htmlFor={id} className="font-win95 text-[12px] font-bold text-black">
         {label}
       </label>
-      <input
+      <Win95Input
         id={searchId}
         type="search"
         placeholder="Filter models by name or provider…"
-        className="rounded-lg border border-[#2f3336] bg-[#0f1419] px-3 py-1.5 text-sm text-[#e7e9ea] outline-none placeholder:text-[#71767b] focus:border-[#1d9bf0] disabled:opacity-50"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         disabled={disabled || loading}
         aria-label="Filter models"
       />
-      <select
+      <Win95Select
         id={id}
-        className="rounded-lg border border-[#2f3336] bg-[#16181c] px-3 py-2 text-sm text-[#e7e9ea] outline-none focus:border-[#1d9bf0] disabled:opacity-50"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled || loading}
@@ -70,12 +70,12 @@ export function ModelSelector({
             {m.provider ? ` — ${m.provider}` : ""}
           </option>
         ))}
-      </select>
+      </Win95Select>
       {!loading && query && filtered.length === 0 ? (
-        <p className="text-xs text-[#71767b]">No models match this filter.</p>
+        <p className="text-[12px] text-win95-dark-grey">No models match this filter.</p>
       ) : null}
       {error ? (
-        <p className="text-xs text-red-400" role="alert">
+        <p className="text-[12px] text-black" role="alert">
           {error}
         </p>
       ) : null}
