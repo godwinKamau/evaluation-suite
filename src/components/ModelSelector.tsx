@@ -45,7 +45,7 @@ export function ModelSelector({
 
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="font-win95 text-[11px] font-bold text-black">
+      <label htmlFor={id} className="font-win95 text-[12px] font-bold text-black">
         {label}
       </label>
       <Win95Input
@@ -72,10 +72,10 @@ export function ModelSelector({
         ))}
       </Win95Select>
       {!loading && query && filtered.length === 0 ? (
-        <p className="text-[11px] text-win95-dark-grey">No models match this filter.</p>
+        <p className="text-[12px] text-win95-dark-grey">No models match this filter.</p>
       ) : null}
       {error ? (
-        <p className="text-[11px] text-black" role="alert">
+        <p className="text-[12px] text-black" role="alert">
           {error}
         </p>
       ) : null}

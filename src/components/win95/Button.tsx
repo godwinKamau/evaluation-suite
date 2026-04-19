@@ -37,8 +37,8 @@ export const Win95Button = forwardRef<HTMLButtonElement, Win95ButtonProps>(
         type={type ?? "button"}
         disabled={disabled}
         className={[
-          "group relative inline-flex min-h-[24px] min-w-[75px] items-center justify-center bg-win95-grey px-4 py-1.5",
-          "font-win95 text-[11px] leading-[10px] text-black outline-none",
+          "group relative inline-flex min-h-[28px] min-w-[85px] items-center justify-center bg-win95-grey px-[18px] py-2",
+          "font-win95 text-[12px] leading-[11px] text-black outline-none",
           "select-none disabled:text-win95-dark-grey disabled:[text-shadow:1px_1px_0_#fff]",
           "enabled:active:translate-x-px enabled:active:translate-y-px",
           bevelClass,

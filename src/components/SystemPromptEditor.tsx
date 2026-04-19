@@ -23,10 +23,10 @@ export function SystemPromptEditor({
 }: Props) {
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="font-win95 text-[11px] font-bold text-black">
+      <label htmlFor={id} className="font-win95 text-[12px] font-bold text-black">
         {label}
       </label>
-      {hint ? <p className="text-[11px] text-win95-dark-grey">{hint}</p> : null}
+      {hint ? <p className="text-[12px] text-win95-dark-grey">{hint}</p> : null}
       <Win95Textarea
         id={id}
         rows={rows}

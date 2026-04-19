@@ -22,12 +22,12 @@ export function MetricsCheckboxMenu({
   return (
     <fieldset
       disabled={disabled}
-      className="win95-sunken bg-win95-grey p-2"
+      className="win95-sunken bg-win95-grey p-2.5"
     >
-      <legend className="px-1 font-win95 text-[11px] font-bold text-black">
+      <legend className="-ml-0.5 bg-win95-grey px-1.5 font-win95 text-[12px] font-bold text-black">
         Evaluation criteria
       </legend>
-      <p className="mb-2 text-[11px] text-win95-dark-grey">
+      <p className="mb-2 text-[12px] text-win95-dark-grey">
         Toggle criteria for the judge prompt and for test-model instruction
         injections (see Test model → effective prompt preview). Pass threshold:{" "}
         ≥70%.

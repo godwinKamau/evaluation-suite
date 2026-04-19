@@ -28,11 +28,11 @@ export function TemplateSelector({
     <div className="flex flex-col gap-1">
       <label
         htmlFor={id}
-        className="font-win95 text-[11px] font-bold text-black"
+        className="font-win95 text-[12px] font-bold text-black"
       >
         Business template
       </label>
-      <p className="text-[11px] text-win95-dark-grey">
+      <p className="text-[12px] text-win95-dark-grey">
         Choose a profile to load a base system prompt and sample prompts, or
         Custom to use your own.
       </p>

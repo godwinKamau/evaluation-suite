@@ -18,11 +18,11 @@ export function ProgressIndicator({
   const pct = total > 0 ? Math.round((current / total) * 100) : 0;
   return (
     <div
-      className="win95-sunken bg-win95-grey p-2"
+      className="win95-sunken bg-win95-grey p-2.5"
       role="status"
       aria-live="polite"
     >
-      <div className="mb-1 flex items-center justify-between font-win95 text-[11px] text-black">
+      <div className="mb-1 flex items-center justify-between font-win95 text-[12px] text-black">
         <span className="font-bold">
           {active ? `${label} ${current}/${total}…` : "Idle"}
         </span>

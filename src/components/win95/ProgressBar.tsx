@@ -23,7 +23,7 @@ export function Win95ProgressBar({ value, max = 100, className = "" }: Props) {
       aria-valuemin={0}
       aria-valuemax={100}
     >
-      <div className="flex h-[14px] w-full gap-px">
+      <div className="flex h-[16px] w-full gap-px">
         {Array.from({ length: segments }, (_, i) => (
           <div
             // eslint-disable-next-line react/no-array-index-key -- static segment strip

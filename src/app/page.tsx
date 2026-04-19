@@ -268,19 +268,19 @@ export default function HomePage() {
   const metricList = Array.from(activeMetrics);
 
   const panelClass =
-    "win95-raised flex flex-col gap-3 bg-win95-grey p-3";
+    "win95-raised flex flex-col gap-3.5 bg-win95-grey p-3.5";
 
   return (
     <main>
       <Win95Window title="LLM Evaluation Suite">
-        <p className="mb-4 max-w-2xl text-[11px] text-black">
+        <p className="mb-5 max-w-2xl text-[12px] text-black">
           Configure a test model and an LLM-as-judge, run on {dataset.length}{" "}
           dataset row(s), then upload results to LangSmith.
         </p>
 
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-5 lg:grid-cols-2">
           <section className={panelClass}>
-            <h2 className="font-win95 text-[11px] font-bold text-black">
+            <h2 className="font-win95 text-[12px] font-bold text-black">
               Test model
             </h2>
             <ModelSelector
@@ -308,20 +308,20 @@ export default function HomePage() {
               hint="Edit the base instructions. Evaluation criteria (right panel) append constraints under // Active Evaluation Constraints: in the preview below."
             />
             <div className="flex flex-col gap-1">
-              <span className="font-win95 text-[11px] font-bold text-black">
+              <span className="font-win95 text-[12px] font-bold text-black">
                 Effective test system prompt (live preview)
               </span>
               <Win95Textarea
                 readOnly
                 rows={12}
-                className="font-mono text-[11px] leading-relaxed text-black"
+                className="font-mono text-[12px] leading-relaxed text-black"
                 value={effectiveTestPrompt}
               />
             </div>
           </section>
 
           <section className={panelClass}>
-            <h2 className="font-win95 text-[11px] font-bold text-black">
+            <h2 className="font-win95 text-[12px] font-bold text-black">
               Evaluator (judge)
             </h2>
             <ModelSelector
@@ -349,20 +349,20 @@ export default function HomePage() {
               disabled={running}
             />
             <div className="flex flex-col gap-1">
-              <span className="font-win95 text-[11px] font-bold text-black">
+              <span className="font-win95 text-[12px] font-bold text-black">
                 Full evaluator system prompt (live preview)
               </span>
               <Win95Textarea
                 readOnly
                 rows={12}
-                className="font-mono text-[11px] leading-relaxed text-black"
+                className="font-mono text-[12px] leading-relaxed text-black"
                 value={fullEvaluatorPrompt}
               />
             </div>
           </section>
         </div>
 
-        <section className={`mt-4 ${panelClass}`}>
+        <section className={`mt-5 ${panelClass}`}>
           <DatasetEditor
             items={dataset}
             onChange={setDataset}
@@ -370,8 +370,8 @@ export default function HomePage() {
           />
         </section>
 
-        <section className={`mt-4 ${panelClass}`}>
-          <h2 className="font-win95 text-[11px] font-bold text-black">Run</h2>
+        <section className={`mt-5 ${panelClass}`}>
+          <h2 className="font-win95 text-[12px] font-bold text-black">Run</h2>
           <ProgressIndicator
             current={progress}
             total={dataset.length}
@@ -379,7 +379,7 @@ export default function HomePage() {
           />
           {runError ? (
             <p
-              className="win95-sunken bg-white p-2 font-win95 text-[11px] text-black"
+              className="win95-sunken bg-white p-2.5 font-win95 text-[12px] text-black"
               role="alert"
             >
               {runError}
@@ -397,17 +397,17 @@ export default function HomePage() {
         </section>
 
         {results.length > 0 ? (
-          <section className="mt-4 flex flex-col gap-4">
-            <h2 className="font-win95 text-[11px] font-bold text-black">
+          <section className="mt-5 flex flex-col gap-5">
+            <h2 className="font-win95 text-[12px] font-bold text-black">
               Results
             </h2>
             <ResultsTable results={results} activeMetrics={metricList} />
 
             <div className={panelClass}>
-              <h3 className="font-win95 text-[11px] font-bold text-black">
+              <h3 className="font-win95 text-[12px] font-bold text-black">
                 LangSmith upload
               </h3>
-              <p className="text-[11px] text-win95-dark-grey">
+              <p className="text-[12px] text-win95-dark-grey">
                 Creates a dataset, an experiment project linked to it, one run
                 per row, and feedback scores per metric. Requires{" "}
                 <code className="font-mono text-black">LANGSMITH_API_KEY</code>{" "}
@@ -417,7 +417,7 @@ export default function HomePage() {
                 <div className="flex flex-1 flex-col gap-1">
                   <label
                     htmlFor="exp-name"
-                    className="font-win95 text-[11px] font-bold text-black"
+                    className="font-win95 text-[12px] font-bold text-black"
                   >
                     Experiment name
                   </label>
@@ -436,10 +436,10 @@ export default function HomePage() {
                 </Win95Button>
               </div>
               {uploadError ? (
-                <p className="font-win95 text-[11px] text-black">{uploadError}</p>
+                <p className="font-win95 text-[12px] text-black">{uploadError}</p>
               ) : null}
               {uploadSuccess ? (
-                <p className="font-win95 text-[11px] text-black">{uploadSuccess}</p>
+                <p className="font-win95 text-[12px] text-black">{uploadSuccess}</p>
               ) : null}
             </div>
           </section>

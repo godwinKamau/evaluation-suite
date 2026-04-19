@@ -52,6 +52,6 @@ body {
   color: var(--foreground);
   background: var(--background);
   font-family: "W95FA", "MS Sans Serif", Tahoma, sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.2;
 }

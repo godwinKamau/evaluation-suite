@@ -33,7 +33,7 @@ export function DatasetEditor({ items, onChange, disabled }: Props) {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="font-win95 text-[11px] font-bold text-black">
+        <span className="font-win95 text-[12px] font-bold text-black">
           Test input dataset
         </span>
         <Win95Button
@@ -44,18 +44,18 @@ export function DatasetEditor({ items, onChange, disabled }: Props) {
           Add row
         </Win95Button>
       </div>
-      <p className="text-[11px] text-win95-dark-grey">
+      <p className="text-[12px] text-win95-dark-grey">
         Each row is one user message to the test model. Reference / ideal
         response is used by the judge for scoring.
       </p>
-      <ul className="flex flex-col gap-3">
+      <ul className="flex flex-col gap-3.5">
         {items.map((row, index) => (
           <li
             key={index}
-            className="win95-sunken flex flex-col gap-2 bg-white p-2"
+            className="win95-sunken flex flex-col gap-2 bg-white p-2.5"
           >
             <div className="flex items-center justify-between gap-2">
-              <span className="font-win95 text-[11px] font-bold text-black">
+              <span className="font-win95 text-[12px] font-bold text-black">
                 Row {index + 1}
               </span>
               <Win95Button
@@ -69,7 +69,7 @@ export function DatasetEditor({ items, onChange, disabled }: Props) {
             <div className="flex flex-col gap-1">
               <label
                 htmlFor={`dataset-input-${index}`}
-                className="font-win95 text-[10px] font-bold text-black"
+                className="font-win95 text-[11px] font-bold text-black"
               >
                 User prompt (input)
               </label>
@@ -80,13 +80,13 @@ export function DatasetEditor({ items, onChange, disabled }: Props) {
                 onChange={(e) => updateRow(index, { input: e.target.value })}
                 disabled={disabled}
                 spellCheck={false}
-                className="font-mono text-[11px]"
+                className="font-mono text-[12px]"
               />
             </div>
             <div className="flex flex-col gap-1">
               <label
                 htmlFor={`dataset-expected-${index}`}
-                className="font-win95 text-[10px] font-bold text-black"
+                className="font-win95 text-[11px] font-bold text-black"
               >
                 Reference / ideal output
               </label>
@@ -99,7 +99,7 @@ export function DatasetEditor({ items, onChange, disabled }: Props) {
                 }
                 disabled={disabled}
                 spellCheck={false}
-                className="font-mono text-[11px]"
+                className="font-mono text-[12px]"
               />
             </div>
           </li>

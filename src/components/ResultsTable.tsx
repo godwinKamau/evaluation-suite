@@ -16,10 +16,10 @@ export function ResultsTable({ results, activeMetrics }: Props) {
   if (results.length === 0) return null;
 
   const cellSunken =
-    "border border-black border-t-white border-l-white border-b-win95-shadow border-r-win95-shadow bg-win95-input p-2 align-top font-win95 text-[11px] leading-snug text-black";
+    "border border-black border-t-white border-l-white border-b-win95-shadow border-r-win95-shadow bg-win95-input p-2.5 align-top font-win95 text-[12px] leading-snug text-black";
 
   const thClass =
-    "border border-black border-t-white border-l-white border-b-win95-shadow border-r-win95-shadow bg-win95-grey p-2 text-left font-win95 text-[11px] font-bold text-black";
+    "border border-black border-t-white border-l-white border-b-win95-shadow border-r-win95-shadow bg-win95-grey p-2.5 text-left font-win95 text-[12px] font-bold text-black";
 
   return (
     <div className="win95-sunken max-w-full overflow-x-auto bg-win95-grey p-1">
@@ -68,7 +68,7 @@ export function ResultsTable({ results, activeMetrics }: Props) {
                 return (
                   <td key={k} className={cellSunken}>
                     <span
-                      className={`inline-flex flex-col gap-0.5 border border-black px-1 py-0.5 font-win95 text-[10px] ${
+                      className={`inline-flex flex-col gap-0.5 border border-black px-1 py-0.5 font-win95 text-[11px] ${
                         pass
                           ? "bg-[#c0dcc0] text-black"
                           : "bg-[#ffc0c0] text-black"
@@ -76,7 +76,7 @@ export function ResultsTable({ results, activeMetrics }: Props) {
                       title={m.reasoning}
                     >
                       {m.score}%
-                      <span className="text-[9px] opacity-90">
+                      <span className="text-[10px] opacity-90">
                         {pass ? "PASS" : "FAIL"}
                       </span>
                     </span>
