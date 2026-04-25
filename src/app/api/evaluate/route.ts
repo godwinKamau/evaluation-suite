@@ -1,7 +1,15 @@
 import { OpenRouter } from "@openrouter/agent";
 import { buildEvaluatorSystemPrompt, buildJudgeUserMessage } from "@/lib/evaluator-prompt";
+import {
+  DATASET_MAX_FIELD_BYTES,
+  DATASET_MAX_ROWS,
+} from "@/lib/dataset-parse";
 import { parseJudgeResponse, validateParsedMetrics } from "@/lib/parse-judge";
 import type { EvaluateRequestBody, EvalResult, MetricKey, SSEEvent } from "@/types";
+
+function utf8ByteLength(s: string): number {
+  return new TextEncoder().encode(s).length;
+}
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -60,6 +68,15 @@ export async function POST(request: Request) {
     );
   }
 
+  if (dataset.length > DATASET_MAX_ROWS) {
+    return new Response(
+      JSON.stringify({
+        error: `Too many rows: ${dataset.length}. Max ${DATASET_MAX_ROWS}.`,
+      }),
+      { status: 400, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
   for (let i = 0; i < dataset.length; i++) {
     const row = dataset[i];
     if (
@@ -71,6 +88,22 @@ export async function POST(request: Request) {
       return new Response(
         JSON.stringify({
           error: `dataset[${i}] must have non-empty input and string expected_output.`,
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    if (utf8ByteLength(row.input) > DATASET_MAX_FIELD_BYTES) {
+      return new Response(
+        JSON.stringify({
+          error: `Row ${i + 1}: field exceeds 8 KiB.`,
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    if (utf8ByteLength(row.expected_output) > DATASET_MAX_FIELD_BYTES) {
+      return new Response(
+        JSON.stringify({
+          error: `Row ${i + 1}: field exceeds 8 KiB.`,
         }),
         { status: 400, headers: { "Content-Type": "application/json" } },
       );

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { DatasetEditor } from "@/components/DatasetEditor";
+import { DatasetUploadControl } from "@/components/DatasetUploadControl";
 import { MetricsCheckboxMenu } from "@/components/MetricsCheckboxMenu";
 import { ModelSelector } from "@/components/ModelSelector";
 import { ProgressIndicator } from "@/components/ProgressIndicator";
@@ -94,6 +95,15 @@ export default function HomePage() {
       setDataset(t.samples.map((row) => ({ ...row })));
     }
   }, []);
+
+  const handleDatasetFileLoad = useCallback(
+    (items: EvalItem[], mode: "replace" | "append") => {
+      const copy = items.map((row) => ({ ...row }));
+      if (mode === "replace") setDataset(copy);
+      else setDataset((prev) => [...prev, ...copy]);
+    },
+    [],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -362,7 +372,12 @@ export default function HomePage() {
           </section>
         </div>
 
-        <section className={`mt-5 ${panelClass}`}>
+        <section className={`mt-5 flex flex-col gap-4 ${panelClass}`}>
+          <DatasetUploadControl
+            resetKey={selectedTemplate}
+            disabled={running}
+            onLoad={handleDatasetFileLoad}
+          />
           <DatasetEditor
             items={dataset}
             onChange={setDataset}

@@ -1,0 +1,4 @@
+[
+  { "prompt": "p1", "answer": "a1" },
+  { "query": "q2", "reference": "r2" }
+]

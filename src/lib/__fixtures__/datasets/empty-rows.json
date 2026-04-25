@@ -1,0 +1,5 @@
+[
+  { "input": "keep", "expected_output": "yes" },
+  { "input": "   ", "expected_output": "skip" },
+  { "input": "", "expected_output": "also skip" }
+]

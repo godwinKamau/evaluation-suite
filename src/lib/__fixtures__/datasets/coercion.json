@@ -1,0 +1,4 @@
+[
+  { "input": 42, "expected_output": true },
+  { "input": false, "expected_output": 0 }
+]

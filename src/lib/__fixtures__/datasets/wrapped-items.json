@@ -1,0 +1,7 @@
+{
+  "items": [
+    { "input": "A", "expected_output": "a" },
+    { "input": "B", "expected_output": "b" },
+    { "input": "C", "expected_output": "c" }
+  ]
+}
