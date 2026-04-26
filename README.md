@@ -21,6 +21,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 - **Test model**: choose from live OpenRouter models; edit system prompt.
 - **Evaluator model**: independent judge model; base instructions + checkboxes for metrics (Accuracy, Relevance, Faithfulness, Coherence, Completeness, Conciseness, Tone) with live-composed system prompt preview.
+- **Template Cases**: Choose from template system prompts and datasets or create your own by adding to the rows of inputs/ideal outputs.
 - **Run**: streams progress (e.g. 3/10); shows a results table with per-metric % scores and pass/fail (≥70%).
 - **LangSmith**: after a run, upload creates a dataset, a project linked to that dataset, one run per example (inputs, outputs, reference in `extra`), and feedback per metric.
 - **Dataset file upload**: load `.json` / `.jsonl` eval rows (see **Custom dataset** above); same data flows through Run and LangSmith upload as the built-in and template samples.

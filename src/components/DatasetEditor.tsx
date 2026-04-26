@@ -27,7 +27,7 @@ export function DatasetEditor({ items, onChange, disabled }: Props) {
   };
 
   const addRow = () => {
-    onChange([...items, emptyRow()]);
+    onChange([emptyRow(), ...items]);
   };
 
   return (

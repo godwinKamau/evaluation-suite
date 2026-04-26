@@ -1,0 +1,22 @@
+[
+  { "input": "What is the capital of Japan?", "expected_output": "Tokyo" },
+  { "input": "What is 15 + 27?", "expected_output": "42" },
+  { "input": "Who wrote '1984'?", "expected_output": "George Orwell" },
+  { "input": "What gas do plants absorb from the atmosphere for photosynthesis?", "expected_output": "Carbon dioxide (CO₂)" },
+  { "input": "What is the smallest prime number?", "expected_output": "2" },
+  { "input": "In which year did the Apollo 11 moon landing occur?", "expected_output": "1969" },
+  { "input": "What is the speed of sound in air at sea level (approximate, m/s)?", "expected_output": "About 343 m/s" },
+  { "input": "What programming language is this project written in (primary app language)?", "expected_output": "TypeScript" },
+  { "input": "What does HTTP stand for?", "expected_output": "Hypertext Transfer Protocol" },
+  { "input": "What is the boiling point of water at standard pressure (°C)?", "expected_output": "100" },
+  { "input": "Name one layer of the OSI model.", "expected_output": "Application (or Transport, Network, Data link, Physical, etc.)" },
+  { "input": "What is the derivative of x² with respect to x?", "expected_output": "2x" },
+  { "input": "What ocean lies between Africa and Australia?", "expected_output": "Indian Ocean" },
+  { "input": "What is the chemical formula for water?", "expected_output": "H₂O" },
+  { "input": "Who painted 'Starry Night'?", "expected_output": "Vincent van Gogh" },
+  { "input": "What does CPU stand for?", "expected_output": "Central Processing Unit" },
+  { "input": "How many sides does a hexagon have?", "expected_output": "6" },
+  { "input": "What is the largest planet in our solar system?", "expected_output": "Jupiter" },
+  { "input": "What does JSON stand for?", "expected_output": "JavaScript Object Notation" },
+  { "input": "In machine learning, what does LLM commonly stand for?", "expected_output": "Large Language Model" }
+]
