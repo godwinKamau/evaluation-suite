@@ -1,0 +1,7 @@
+{
+  "data": [
+    { "input": "x", "expected_output": "X" },
+    { "input": "y", "expected_output": "Y" },
+    { "input": "z", "expected_output": "Z" }
+  ]
+}

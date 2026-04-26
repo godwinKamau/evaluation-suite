@@ -1,0 +1,5 @@
+[
+  { "input": "One", "expected_output": "1" },
+  { "input": "Two", "expected_output": "2" },
+  { "input": "Three", "expected_output": "3" }
+]
