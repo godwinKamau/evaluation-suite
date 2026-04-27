@@ -76,3 +76,4 @@ npm run dev
 ```
 Open http://localhost:3000. Select a model, select a template, select an evaluator, configure your evaluator metrics, upload or enter test cases, and click Run evaluation.
 
+**Live Demo:**[https://evaluation-suite.vercel.app/](https://evaluation-suite.vercel.app/)
