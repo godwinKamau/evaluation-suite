@@ -72,6 +72,7 @@ export default function HomePage() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
+  const [showHowTo, setShowHowTo] = useState(false);
 
   const isToolDataset = useMemo(
     () => dataset.length > 0 && dataset.every(isToolCallItem),
@@ -146,6 +147,19 @@ export default function HomePage() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!showHowTo) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setShowHowTo(false);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [showHowTo]);
 
   const toggleMetric = useCallback((key: MetricKey) => {
     setActiveMetrics((prev) => {
@@ -328,14 +342,17 @@ export default function HomePage() {
   return (
     <main>
       <Win95Window title="LLM Evaluation Suite">
-        <p className="mb-5 max-w-2xl text-[12px] text-black">
-          Configure a test model
-          {isToolDataset
-            ? " and deterministic tool-call scoring"
-            : " and an LLM-as-judge"}
-          , run on {dataset.length} dataset row(s), then upload results to
-          LangSmith.
-        </p>
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <p className="max-w-2xl text-[12px] text-black">
+            Configure a test model
+            {isToolDataset
+              ? " and deterministic tool-call scoring"
+              : " and an LLM-as-judge"}
+            , run on {dataset.length} dataset row(s), then upload results to
+            LangSmith.
+          </p>
+          <Win95Button onClick={() => setShowHowTo(true)}>How-To</Win95Button>
+        </div>
 
         <div className="grid gap-5 lg:grid-cols-2">
           <section className={panelClass}>
@@ -530,6 +547,99 @@ export default function HomePage() {
               ) : null}
             </div>
           </section>
+        ) : null}
+
+        {showHowTo ? (
+          <div
+            className="fixed inset-0 z-50 flex items-start justify-center bg-black/20 p-4 pt-16"
+            onClick={() => setShowHowTo(false)}
+          >
+            <section
+              className="win95-raised w-full max-w-2xl bg-win95-grey font-win95 text-[12px] leading-[14px] text-black"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="how-to-title"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="flex h-[20px] min-h-[20px] items-center justify-between bg-win95-navy pl-1 pr-0.5 text-white">
+                <h2 id="how-to-title" className="truncate font-bold">
+                  How to use LLM-as-judge
+                </h2>
+                <button
+                  type="button"
+                  className="flex h-[16px] w-[16px] items-center justify-center bg-win95-grey text-[10px] font-bold leading-none text-black shadow-[inset_-1px_-1px_0_0_#000,inset_1px_1px_0_0_#fff,inset_-2px_-2px_0_0_#7f7f7f,inset_2px_2px_0_0_#dfdfdf]"
+                  onClick={() => setShowHowTo(false)}
+                  aria-label="Close how-to dialog"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="p-3.5">
+                <div className="win95-sunken max-h-[70vh] overflow-y-auto bg-white p-3 text-black">
+                  <p className="mb-3">
+                    LLM-as-judge runs your dataset through a model under test,
+                    then asks a separate judge model to score each answer against
+                    the metrics you select.
+                  </p>
+
+                  <ol className="list-decimal space-y-2 pl-5">
+                    <li>
+                      Choose the <strong>Model under test</strong>. This is the
+                      model whose answers you want to evaluate.
+                    </li>
+                    <li>
+                      Choose a template, upload a dataset, or edit the rows
+                      directly. Each row should include an input and an expected
+                      output or reference answer.
+                    </li>
+                    <li>
+                      For standard text datasets, choose a{" "}
+                      <strong>Judge model</strong>. This model grades the model
+                      under test and should be independent from it when possible.
+                    </li>
+                    <li>
+                      Select the evaluation metrics that matter for your task:
+                      Accuracy, Relevance, Faithfulness, Coherence,
+                      Completeness, Conciseness, and Tone.
+                    </li>
+                    <li>
+                      Review the evaluator prompt preview. The base judge
+                      instructions are combined with the selected metric
+                      criteria and a 70% pass/fail threshold.
+                    </li>
+                    <li>
+                      Click <strong>Run evaluation</strong>. The app evaluates
+                      rows one at a time, updates the progress bar, and streams
+                      results into the table as they finish.
+                    </li>
+                    <li>
+                      Review per-row outputs, metric scores, pass/fail status,
+                      token usage, and cost. Low scores point to rows worth
+                      inspecting manually.
+                    </li>
+                    <li>
+                      When the run looks good, optionally upload results to
+                      LangSmith to preserve the dataset, experiment, row-level
+                      runs, and metric feedback for traceability.
+                    </li>
+                  </ol>
+
+                  <p className="mt-3">
+                    Tool-calling datasets are handled differently: the LLM judge
+                    fields are disabled because tool-call rows use deterministic
+                    scoring for tool selection and argument quality.
+                  </p>
+                </div>
+
+                <div className="mt-3 flex justify-end">
+                  <Win95Button onClick={() => setShowHowTo(false)}>
+                    Close
+                  </Win95Button>
+                </div>
+              </div>
+            </section>
+          </div>
         ) : null}
       </Win95Window>
     </main>

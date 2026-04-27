@@ -1,6 +1,9 @@
 "use client";
 
-import { Win95ProgressBar } from "@/components/win95/ProgressBar";
+import {
+  Win95ProgressBar,
+  WIN95_PROGRESS_SEGMENTS,
+} from "@/components/win95/ProgressBar";
 
 type Props = {
   current: number;
@@ -17,6 +20,14 @@ export function ProgressIndicator({
 }: Props) {
   const pct = total > 0 ? Math.round((current / total) * 100) : 0;
   const inFlight = active && total > 0 ? Math.min(current + 1, total) : current;
+  const pulseSegment =
+    active && total > 0
+      ? Math.min(
+          Math.floor((current / total) * WIN95_PROGRESS_SEGMENTS),
+          WIN95_PROGRESS_SEGMENTS - 1,
+        )
+      : undefined;
+
   return (
     <div
       className="win95-sunken bg-win95-grey p-2.5"
@@ -29,7 +40,7 @@ export function ProgressIndicator({
         </span>
         <span className="text-win95-dark-grey">{pct}%</span>
       </div>
-      <Win95ProgressBar value={pct} max={100} />
+      <Win95ProgressBar value={pct} max={100} pulseSegment={pulseSegment} />
     </div>
   );
 }

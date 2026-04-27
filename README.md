@@ -1,6 +1,7 @@
 # LLM Evaluation Suite
 
-*Demo Video:* [Here](https://drive.google.com/file/d/1T_FzrY3xTT5g-PkTOJvbLK5fIwz867uD/view?usp=sharing)
+**Demo Video:** [Here](https://drive.google.com/file/d/1T_FzrY3xTT5g-PkTOJvbLK5fIwz867uD/view?usp=sharing)
+**Live App:** https://evaluation-suite.vercel.app/
 
 ## The Problem
 Teams evaluating LLMs for internal tools — support routing, knowledge retrieval, ticket triage — face a recurring problem: there is no fast, structured way to compare model quality across the dimensions that matter for their specific use case. Generic benchmarks measure academic tasks, not business ones. Running ad-hoc comparisons in a playground produces no reproducible record.
@@ -114,6 +115,7 @@ Run tests with: npm test
 
 ## Links
 GitHub: https://github.com/godwinKamau/evaluation-suite
+
 Live App: https://evaluation-suite.vercel.app/
 
 ## Credits

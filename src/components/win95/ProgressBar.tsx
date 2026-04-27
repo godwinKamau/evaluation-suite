@@ -5,15 +5,22 @@ type Props = {
   /** 0–100 */
   max?: number;
   className?: string;
+  pulseSegment?: number;
 };
+
+export const WIN95_PROGRESS_SEGMENTS = 24;
 
 /**
  * Win95-style progress: sunken track + segmented blue blocks.
  */
-export function Win95ProgressBar({ value, max = 100, className = "" }: Props) {
+export function Win95ProgressBar({
+  value,
+  max = 100,
+  className = "",
+  pulseSegment,
+}: Props) {
   const pct = max > 0 ? Math.min(100, Math.max(0, (value / max) * 100)) : 0;
-  const segments = 24;
-  const filled = Math.round((pct / 100) * segments);
+  const filled = Math.round((pct / 100) * WIN95_PROGRESS_SEGMENTS);
 
   return (
     <div
@@ -24,15 +31,18 @@ export function Win95ProgressBar({ value, max = 100, className = "" }: Props) {
       aria-valuemax={100}
     >
       <div className="flex h-[16px] w-full gap-px">
-        {Array.from({ length: segments }, (_, i) => (
-          <div
-            // eslint-disable-next-line react/no-array-index-key -- static segment strip
-            key={i}
-            className={`min-w-0 flex-1 ${
-              i < filled ? "bg-win95-progress" : "bg-win95-input"
-            }`}
-          />
-        ))}
+        {Array.from({ length: WIN95_PROGRESS_SEGMENTS }, (_, i) => {
+          const isPulsing = i === pulseSegment;
+          return (
+            <div
+              // eslint-disable-next-line react/no-array-index-key -- static segment strip
+              key={i}
+              className={`min-w-0 flex-1 ${
+                i < filled || isPulsing ? "bg-win95-progress" : "bg-win95-input"
+              } ${isPulsing ? "win95-progress-blink" : ""}`}
+            />
+          );
+        })}
       </div>
     </div>
   );
