@@ -1,0 +1,8 @@
+[
+  {
+    "input": "What's the weather in Paris?",
+    "expected_tool_calls": [
+      { "name": "get_weather", "arguments": { "city": "Paris" } }
+    ]
+  }
+]

@@ -1,24 +1,47 @@
 "use client";
 
-import type { EvalItem } from "@/types";
+import { ToolCallRowEditor } from "@/components/ToolCallRowEditor";
 import { Win95Button } from "@/components/win95/Button";
 import { Win95Textarea } from "@/components/win95/Input";
+import { DEFAULT_EDITOR_TOOL_CATALOG } from "@/lib/tool-call-default-catalog";
+import { isToolCallItem, type EvalItem, type ToolCallEvalItem } from "@/types";
 
 type Props = {
   items: EvalItem[];
   onChange: (items: EvalItem[]) => void;
   disabled?: boolean;
+  templateKind?: "text" | "tool_call";
 };
 
-function emptyRow(): EvalItem {
-  return { input: "", expected_output: "" };
+function emptyTextRow(): EvalItem {
+  return { kind: "text", input: "", expected_output: "" };
 }
 
-export function DatasetEditor({ items, onChange, disabled }: Props) {
+function emptyToolRow(): ToolCallEvalItem {
+  return {
+    kind: "tool_call",
+    input: "",
+    tools: DEFAULT_EDITOR_TOOL_CATALOG,
+    expected_tool_calls: [],
+    expected_output: "(no tool)",
+  };
+}
+
+export function DatasetEditor({
+  items,
+  onChange,
+  disabled,
+  templateKind = "text",
+}: Props) {
   const updateRow = (index: number, patch: Partial<EvalItem>) => {
     const next = items.map((row, i) =>
-      i === index ? { ...row, ...patch } : row,
+      i === index ? ({ ...row, ...patch } as EvalItem) : row,
     );
+    onChange(next);
+  };
+
+  const replaceRow = (index: number, row: EvalItem) => {
+    const next = items.map((r, i) => (i === index ? row : r));
     onChange(next);
   };
 
@@ -27,7 +50,8 @@ export function DatasetEditor({ items, onChange, disabled }: Props) {
   };
 
   const addRow = () => {
-    onChange([emptyRow(), ...items]);
+    const row = templateKind === "tool_call" ? emptyToolRow() : emptyTextRow();
+    onChange([row, ...items]);
   };
 
   return (
@@ -45,8 +69,9 @@ export function DatasetEditor({ items, onChange, disabled }: Props) {
         </Win95Button>
       </div>
       <p className="text-[12px] text-win95-dark-grey">
-        Each row is one user message to the test model. Reference / ideal
-        response is used by the judge for scoring.
+        {templateKind === "tool_call"
+          ? "Each row is one user message. The model must emit tool calls matching expected_tool_calls; scoring is deterministic (no LLM judge)."
+          : "Each row is one user message to the test model. Reference / ideal response is used by the judge for scoring."}
       </p>
       <ul className="flex flex-col gap-3.5">
         {items.map((row, index) => (
@@ -66,42 +91,53 @@ export function DatasetEditor({ items, onChange, disabled }: Props) {
                 Remove
               </Win95Button>
             </div>
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor={`dataset-input-${index}`}
-                className="font-win95 text-[11px] font-bold text-black"
-              >
-                User prompt (input)
-              </label>
-              <Win95Textarea
-                id={`dataset-input-${index}`}
-                rows={3}
-                value={row.input}
-                onChange={(e) => updateRow(index, { input: e.target.value })}
+            {isToolCallItem(row) ? (
+              <ToolCallRowEditor
+                row={row}
+                index={index}
+                onChange={(next) => replaceRow(index, next)}
                 disabled={disabled}
-                spellCheck={false}
-                className="font-mono text-[12px]"
               />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor={`dataset-expected-${index}`}
-                className="font-win95 text-[11px] font-bold text-black"
-              >
-                Reference / ideal output
-              </label>
-              <Win95Textarea
-                id={`dataset-expected-${index}`}
-                rows={3}
-                value={row.expected_output}
-                onChange={(e) =>
-                  updateRow(index, { expected_output: e.target.value })
-                }
-                disabled={disabled}
-                spellCheck={false}
-                className="font-mono text-[12px]"
-              />
-            </div>
+            ) : (
+              <>
+                <div className="flex flex-col gap-1">
+                  <label
+                    htmlFor={`dataset-input-${index}`}
+                    className="font-win95 text-[11px] font-bold text-black"
+                  >
+                    User prompt (input)
+                  </label>
+                  <Win95Textarea
+                    id={`dataset-input-${index}`}
+                    rows={3}
+                    value={row.input}
+                    onChange={(e) => updateRow(index, { input: e.target.value })}
+                    disabled={disabled}
+                    spellCheck={false}
+                    className="font-mono text-[12px]"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label
+                    htmlFor={`dataset-expected-${index}`}
+                    className="font-win95 text-[11px] font-bold text-black"
+                  >
+                    Reference / ideal output
+                  </label>
+                  <Win95Textarea
+                    id={`dataset-expected-${index}`}
+                    rows={3}
+                    value={row.expected_output}
+                    onChange={(e) =>
+                      updateRow(index, { expected_output: e.target.value })
+                    }
+                    disabled={disabled}
+                    spellCheck={false}
+                    className="font-mono text-[12px]"
+                  />
+                </div>
+              </>
+            )}
           </li>
         ))}
       </ul>

@@ -180,4 +180,79 @@ describe("parseDatasetFile", () => {
       ),
     );
   });
+
+  it("parses tool-call-valid.json", () => {
+    const r = parseDatasetFile(readUtf8("tool-call-valid.json"), "tool-call-valid.json");
+    assert(r.ok);
+    assert.equal(r.items.length, 2);
+    const first = r.items[0]!;
+    assert.equal(first.kind, "tool_call");
+    if (first.kind === "tool_call") {
+      assert.equal(first.tools[0]!.function.name, "get_weather");
+      assert.equal(first.expected_tool_calls[0]!.name, "get_weather");
+      assert.equal(first.expected_tool_calls[0]!.arguments.city, "Paris");
+    }
+  });
+
+  it("parses tool-call-valid.jsonl", () => {
+    const r = parseDatasetFile(
+      readUtf8("tool-call-valid.jsonl"),
+      "tool-call-valid.jsonl",
+    );
+    assert(r.ok);
+    assert.equal(r.items.length, 2);
+    assert.equal(r.items[0]!.kind, "tool_call");
+  });
+
+  it("rejects tool-call-missing-tools.json", () => {
+    const r = parseDatasetFile(
+      readUtf8("tool-call-missing-tools.json"),
+      "tool-call-missing-tools.json",
+    );
+    assert(!r.ok);
+    assert.ok(r.error.includes("missing required 'tools'"));
+  });
+
+  it("rejects tool-call-bad-expected.json", () => {
+    const r = parseDatasetFile(
+      readUtf8("tool-call-bad-expected.json"),
+      "tool-call-bad-expected.json",
+    );
+    assert(!r.ok);
+    assert.equal(
+      r.error,
+      "Row 1: 'expected_tool_calls' must be an array.",
+    );
+  });
+
+  it("rejects tool-call-oversize-tools.json", () => {
+    const r = parseDatasetFile(
+      readUtf8("tool-call-oversize-tools.json"),
+      "tool-call-oversize-tools.json",
+    );
+    assert(!r.ok);
+    assert.equal(r.error, "Row 1: 'tools' JSON exceeds 8 KiB.");
+  });
+
+  it("rejects tool-call-mixed-kind.json", () => {
+    const r = parseDatasetFile(
+      readUtf8("tool-call-mixed-kind.json"),
+      "tool-call-mixed-kind.json",
+    );
+    assert(!r.ok);
+    assert.ok(r.error.includes("Mixed-kind dataset"));
+  });
+
+  it("normalizes expected_calls alias in tool-call-alias-expected-calls.json", () => {
+    const r = parseDatasetFile(
+      readUtf8("tool-call-alias-expected-calls.json"),
+      "tool-call-alias-expected-calls.json",
+    );
+    assert(r.ok);
+    const row = r.items[0]!;
+    assert.equal(row.kind, "tool_call");
+    if (row.kind === "tool_call") {
+      assert.equal(row.expected_tool_calls[0]!.name, "get_weather");
+    }
+  });
 });

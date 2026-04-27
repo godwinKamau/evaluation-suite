@@ -9,6 +9,9 @@ export function buildEvaluatorSystemPrompt(
   basePrompt: string,
   activeMetrics: MetricKey[],
 ): string {
+  if (activeMetrics.length === 0) {
+    return basePrompt.trim();
+  }
   const criteriaList = activeMetrics
     .map((k) => `- ${METRIC_LABELS[k]} (${k}): score 0-100; pass if ≥ ${PASS_THRESHOLD_PERCENT}%`)
     .join("\n");

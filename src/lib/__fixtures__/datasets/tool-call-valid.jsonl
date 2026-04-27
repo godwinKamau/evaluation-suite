@@ -1,0 +1,2 @@
+{"input":"Look up order ORD-1","tools":[{"type":"function","function":{"name":"search_orders","description":"Search orders","parameters":{"type":"object","properties":{"order_id":{"type":"string"}},"required":["order_id"]}}}],"expected_tool_calls":[{"name":"search_orders","arguments":{"order_id":"ORD-1"}}]}
+{"input":"No tool needed","tools":[{"type":"function","function":{"name":"search_orders","description":"Search orders","parameters":{"type":"object","properties":{"order_id":{"type":"string"}},"required":["order_id"]}}}],"expected_tool_calls":[]}

@@ -40,12 +40,25 @@ export async function uploadExperimentToLangSmith(options: {
     dataType: "kv",
   });
 
-  const exampleCreates = results.map((row, i) => ({
-    dataset_id: dataset.id,
-    inputs: { input: row.input },
-    outputs: { expected_output: row.expected_output },
-    metadata: { index: i },
-  }));
+  const exampleCreates = results.map((row, i) => {
+    if (row.kind === "tool_call") {
+      return {
+        dataset_id: dataset.id,
+        inputs: { input: row.input, tools: row.tools ?? [] },
+        outputs: {
+          expected_tool_calls: row.expected_tool_calls ?? [],
+          expected_output: row.expected_output,
+        },
+        metadata: { index: i },
+      };
+    }
+    return {
+      dataset_id: dataset.id,
+      inputs: { input: row.input },
+      outputs: { expected_output: row.expected_output },
+      metadata: { index: i },
+    };
+  });
 
   const examples = await client.createExamples(exampleCreates);
 
@@ -62,28 +75,76 @@ export async function uploadExperimentToLangSmith(options: {
     const result = results[i];
     const example = examples[i];
     const runId = randomUUID();
+    const latencyMs = result.latency_ms ?? null;
+    const endTime = Date.now();
+    const startTime = endTime - (latencyMs ?? 0);
+    const metadata = {
+      cost_usd: result.cost_usd ?? null,
+      latency_ms: latencyMs,
+    };
 
-    await client.createRun({
-      id: runId,
-      name: `eval-${i + 1}`,
-      run_type: "chain",
-      project_name: projectName,
-      reference_example_id: example?.id,
-      inputs: {
-        input: result.input,
-      },
-      outputs: {
-        actual_output: result.actual_output,
-        ...(result.error ? { error: result.error } : {}),
-      },
-      extra: {
-        reference_outputs: { expected_output: result.expected_output },
-        evaluation_metrics: activeMetrics,
-      },
-      error: result.error,
-      start_time: Date.now(),
-      end_time: Date.now(),
-    });
+    if (result.kind === "tool_call") {
+      const toolCalls = result.tool_calls ?? [];
+      await client.createRun({
+        id: runId,
+        name: `eval-${i + 1}`,
+        run_type: "llm",
+        project_name: projectName,
+        reference_example_id: example?.id,
+        inputs: {
+          input: result.input,
+          tools: result.tools ?? [],
+        },
+        outputs: {
+          tool_calls: toolCalls,
+          messages: [
+            {
+              role: "assistant",
+              content: toolCalls.map((tc, j) => ({
+                type: "tool_call",
+                name: tc.name,
+                args: tc.arguments,
+                id: `call_${j + 1}`,
+              })),
+            },
+          ],
+          ...(result.error ? { error: result.error } : {}),
+        },
+        extra: {
+          reference_outputs: {
+            expected_tool_calls: result.expected_tool_calls ?? [],
+          },
+          evaluation_metrics: activeMetrics,
+          metadata,
+        },
+        error: result.error,
+        start_time: startTime,
+        end_time: endTime,
+      });
+    } else {
+      await client.createRun({
+        id: runId,
+        name: `eval-${i + 1}`,
+        run_type: "chain",
+        project_name: projectName,
+        reference_example_id: example?.id,
+        inputs: {
+          input: result.input,
+        },
+        outputs: {
+          actual_output: result.actual_output,
+          ...(result.error ? { error: result.error } : {}),
+        },
+        extra: {
+          reference_outputs: { expected_output: result.expected_output },
+          evaluation_metrics: activeMetrics,
+          metadata,
+        },
+        error: result.error,
+        start_time: startTime,
+        end_time: endTime,
+      });
+    }
 
     runIds.push(runId);
 

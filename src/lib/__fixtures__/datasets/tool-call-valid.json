@@ -1,0 +1,44 @@
+[
+  {
+    "input": "What's the weather in Paris?",
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "get_weather",
+          "description": "Get weather",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "city": { "type": "string" }
+            },
+            "required": ["city"]
+          }
+        }
+      }
+    ],
+    "expected_tool_calls": [
+      { "name": "get_weather", "arguments": { "city": "Paris" } }
+    ]
+  },
+  {
+    "input": "No tool required for this message.",
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "get_weather",
+          "description": "Get weather",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "city": { "type": "string" }
+            },
+            "required": ["city"]
+          }
+        }
+      }
+    ],
+    "expected_tool_calls": []
+  }
+]

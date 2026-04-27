@@ -1,7 +1,7 @@
 import { ALL_METRIC_KEYS, type MetricKey } from "@/types";
 
 /** One concise instruction per evaluation dimension, appended to the test model system prompt. */
-export const METRIC_INJECTIONS: Record<MetricKey, string> = {
+export const METRIC_INJECTIONS: Partial<Record<MetricKey, string>> = {
   accuracy:
     "Ensure factual claims are correct; if you cannot verify a fact, say so and avoid guessing.",
   relevance:
@@ -29,12 +29,14 @@ export function composeTestSystemPrompt(
 ): string {
   const base = basePrompt.trim();
   const set = new Set(activeMetrics);
-  const ordered = ALL_METRIC_KEYS.filter((k) => set.has(k));
+  const ordered = ALL_METRIC_KEYS.filter(
+    (k) => set.has(k) && METRIC_INJECTIONS[k] !== undefined,
+  );
   if (ordered.length === 0) {
     return base;
   }
   const bullets = ordered
-    .map((k) => `- ${METRIC_INJECTIONS[k]}`)
+    .map((k) => `- ${METRIC_INJECTIONS[k]!}`)
     .join("\n");
   return `${base}\n\n${CONSTRAINTS_HEADER}\n${bullets}`;
 }
