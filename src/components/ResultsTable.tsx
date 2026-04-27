@@ -86,12 +86,14 @@ export function ResultsTable({ results, activeMetrics }: Props) {
                 {r.index + 1}
               </td>
               <td className={`${cellSunken} max-w-xs`}>{r.input}</td>
-              <td className={`${cellSunken} max-w-xs whitespace-pre-wrap font-mono`}>
-                {r.error ? (
-                  <span className="text-black underline">{r.error}</span>
-                ) : (
-                  formatActualOutput(r)
-                )}
+              <td className={`${cellSunken} max-w-xs font-mono`}>
+                <div className="max-h-40 overflow-y-auto whitespace-pre-wrap pr-1">
+                  {r.error ? (
+                    <span className="text-black underline">{r.error}</span>
+                  ) : (
+                    formatActualOutput(r)
+                  )}
+                </div>
               </td>
               <td className={`${cellSunken} max-w-xs text-win95-dark-grey`}>
                 {r.expected_output}
