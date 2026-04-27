@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "tsx --test src/lib/dataset-parse.test.ts"
+    "test": "tsx --test src/lib/dataset-parse.test.ts src/lib/tool-call-scorer.test.ts src/lib/run-tool-call-eval.test.ts"
   },
   "dependencies": {
     "@openrouter/agent": "^0.3.2",

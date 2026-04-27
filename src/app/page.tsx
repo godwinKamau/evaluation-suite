@@ -19,12 +19,15 @@ import { BUSINESS_TEMPLATES } from "@/lib/business-templates";
 import { EVAL_DATASET } from "@/lib/dataset";
 import { buildEvaluatorSystemPrompt } from "@/lib/evaluator-prompt";
 import { composeTestSystemPrompt } from "@/lib/test-injections";
-import type {
-  EvalItem,
-  EvalResult,
-  MetricKey,
-  OpenRouterModelOption,
-  SSEEvent,
+import {
+  TEXT_METRIC_KEYS,
+  TOOL_METRIC_KEYS,
+  isToolCallItem,
+  type EvalItem,
+  type EvalResult,
+  type MetricKey,
+  type OpenRouterModelOption,
+  type SSEEvent,
 } from "@/types";
 
 const DEFAULT_TEST_PROMPT = "You are a helpful assistant.";
@@ -70,13 +73,18 @@ export default function HomePage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
 
+  const isToolDataset = useMemo(
+    () => dataset.length > 0 && dataset.every(isToolCallItem),
+    [dataset],
+  );
+
   const fullEvaluatorPrompt = useMemo(
     () =>
       buildEvaluatorSystemPrompt(
         evaluatorBasePrompt,
-        Array.from(activeMetrics),
+        isToolDataset ? [] : Array.from(activeMetrics),
       ),
-    [evaluatorBasePrompt, activeMetrics],
+    [evaluatorBasePrompt, activeMetrics, isToolDataset],
   );
 
   const effectiveTestPrompt = useMemo(
@@ -89,10 +97,17 @@ export default function HomePage() {
     if (value === "custom") {
       setTestBasePrompt(DEFAULT_TEST_PROMPT);
       setDataset(EVAL_DATASET.map((row) => ({ ...row })));
+      setActiveMetrics(new Set(TEXT_METRIC_KEYS));
+    } else if (value === "tool_calling") {
+      const t = BUSINESS_TEMPLATES[value];
+      setTestBasePrompt(t.basePrompt);
+      setDataset(t.samples.map((row) => ({ ...row })));
+      setActiveMetrics(new Set(TOOL_METRIC_KEYS));
     } else {
       const t = BUSINESS_TEMPLATES[value];
       setTestBasePrompt(t.basePrompt);
       setDataset(t.samples.map((row) => ({ ...row })));
+      setActiveMetrics(new Set(TEXT_METRIC_KEYS));
     }
   }, []);
 
@@ -164,8 +179,14 @@ export default function HomePage() {
     setResults([]);
     setProgress(0);
 
-    if (!testModel || !evaluatorModel) {
-      setRunError("Select both a test model and an evaluator model.");
+    const anyToolRow = dataset.some(isToolCallItem);
+
+    if (!testModel) {
+      setRunError("Select a test model.");
+      return;
+    }
+    if (!anyToolRow && !evaluatorModel) {
+      setRunError("Select an evaluator model for text-evaluation datasets.");
       return;
     }
     if (activeMetrics.size === 0) {
@@ -182,6 +203,30 @@ export default function HomePage() {
         `Dataset row ${invalidRow + 1}: user prompt (input) cannot be empty.`,
       );
       return;
+    }
+
+    if (anyToolRow && !dataset.every(isToolCallItem)) {
+      setRunError(
+        "Dataset mixes text rows and tool-calling rows. Use a single-kind file or template.",
+      );
+      return;
+    }
+    if (anyToolRow) {
+      const missingToolMetric = TOOL_METRIC_KEYS.filter((k) => !activeMetrics.has(k));
+      if (missingToolMetric.length > 0) {
+        setRunError(
+          `Tool-calling dataset requires all three tool metrics (missing: ${missingToolMetric.join(", ")}). Choose the Tool-Calling template or select all tool metrics.`,
+        );
+        return;
+      }
+      const toolKeys = TOOL_METRIC_KEYS as readonly string[];
+      const extra = [...activeMetrics].filter((k) => !toolKeys.includes(k));
+      if (extra.length > 0) {
+        setRunError(
+          "Tool-calling dataset cannot use text judge metrics. Choose the Tool-Calling template.",
+        );
+        return;
+      }
     }
 
     setRunning(true);
@@ -284,8 +329,12 @@ export default function HomePage() {
     <main>
       <Win95Window title="LLM Evaluation Suite">
         <p className="mb-5 max-w-2xl text-[12px] text-black">
-          Configure a test model and an LLM-as-judge, run on {dataset.length}{" "}
-          dataset row(s), then upload results to LangSmith.
+          Configure a test model
+          {isToolDataset
+            ? " and deterministic tool-call scoring"
+            : " and an LLM-as-judge"}
+          , run on {dataset.length} dataset row(s), then upload results to
+          LangSmith.
         </p>
 
         <div className="grid gap-5 lg:grid-cols-2">
@@ -315,7 +364,11 @@ export default function HomePage() {
               onChange={setTestBasePrompt}
               disabled={running}
               rows={8}
-              hint="Edit the base instructions. Evaluation criteria (right panel) append constraints under // Active Evaluation Constraints: in the preview below."
+              hint={
+                isToolDataset
+                  ? "Edit the base instructions sent to the test model for tool-calling."
+                  : "Edit the base instructions. Evaluation criteria (right panel) append constraints under // Active Evaluation Constraints: in the preview below."
+              }
             />
             <div className="flex flex-col gap-1">
               <span className="font-win95 text-[12px] font-bold text-black">
@@ -334,41 +387,59 @@ export default function HomePage() {
             <h2 className="font-win95 text-[12px] font-bold text-black">
               Evaluator (judge)
             </h2>
-            <ModelSelector
-              id="eval-model"
-              label="Judge model"
-              models={models}
-              value={evaluatorModel}
-              onChange={setEvaluatorModel}
-              loading={modelsLoading}
-              error={modelsError}
-              disabled={running}
-            />
-            <SystemPromptEditor
-              id="eval-base"
-              label="Evaluator base instructions"
-              value={evaluatorBasePrompt}
-              onChange={setEvaluatorBasePrompt}
-              disabled={running}
-              rows={4}
-              hint="Criteria below are appended automatically with pass/fail at 70%."
-            />
+            {isToolDataset ? (
+              <p className="text-[12px] text-win95-dark-grey">
+                The LLM judge is not used for tool-calling datasets. Judge fields
+                below are inactive; evaluation criteria remain active for scoring
+                and display.
+              </p>
+            ) : null}
+            <div
+              className={
+                isToolDataset
+                  ? "flex flex-col gap-3.5 pointer-events-none select-none opacity-50 grayscale"
+                  : "flex flex-col gap-3.5"
+              }
+            >
+              <ModelSelector
+                id="eval-model"
+                label="Judge model"
+                models={models}
+                value={evaluatorModel}
+                onChange={setEvaluatorModel}
+                loading={modelsLoading}
+                error={modelsError}
+                disabled={running || isToolDataset}
+              />
+              <SystemPromptEditor
+                id="eval-base"
+                label="Evaluator base instructions"
+                value={evaluatorBasePrompt}
+                onChange={setEvaluatorBasePrompt}
+                disabled={running || isToolDataset}
+                rows={4}
+                hint="Criteria below are appended automatically with pass/fail at 70%."
+              />
+              <div className="flex flex-col gap-1">
+                <span className="font-win95 text-[12px] font-bold text-black">
+                  Full evaluator system prompt (live preview)
+                </span>
+                <Win95Textarea
+                  readOnly
+                  tabIndex={isToolDataset ? -1 : undefined}
+                  rows={12}
+                  className="font-mono text-[12px] leading-relaxed text-black"
+                  value={fullEvaluatorPrompt}
+                />
+              </div>
+            </div>
             <MetricsCheckboxMenu
               activeMetrics={activeMetrics}
               onToggle={toggleMetric}
               disabled={running}
+              metricKeys={isToolDataset ? TOOL_METRIC_KEYS : TEXT_METRIC_KEYS}
+              lockToggles={false}
             />
-            <div className="flex flex-col gap-1">
-              <span className="font-win95 text-[12px] font-bold text-black">
-                Full evaluator system prompt (live preview)
-              </span>
-              <Win95Textarea
-                readOnly
-                rows={12}
-                className="font-mono text-[12px] leading-relaxed text-black"
-                value={fullEvaluatorPrompt}
-              />
-            </div>
           </section>
         </div>
 
@@ -382,6 +453,7 @@ export default function HomePage() {
             items={dataset}
             onChange={setDataset}
             disabled={running}
+            templateKind={isToolDataset ? "tool_call" : "text"}
           />
         </section>
 

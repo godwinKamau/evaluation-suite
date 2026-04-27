@@ -1,4 +1,4 @@
-import type { EvalItem, TemplateKey } from "@/types";
+import type { EvalItem, TemplateKey, ToolCallSpec } from "@/types";
 
 const SUPPORT_BASE = `You are an AI customer support agent for [Company Name]. Your primary goal is to resolve user issues quickly, accurately, and politely while maintaining the company's tone and policies.
 
@@ -84,6 +84,83 @@ Behavior:
 
 Tone:
 - Formal, precise, and cautious`;
+
+const TOOL_CALLING_BASE = `You are a tool-calling assistant.
+
+Rules:
+- Use only the provided tools.
+- If a tool is needed, emit only tool calls and no prose.
+- If no tool is needed, do not call any tool.
+- Never invent tool names or argument keys.
+- For multi-step requests, call tools in the order needed to satisfy the request.`;
+
+const TOOL_CALLING_CATALOG: ToolCallSpec[] = [
+  {
+    type: "function",
+    function: {
+      name: "search_orders",
+      description: "Look up order status and fulfillment details by order ID.",
+      parameters: {
+        type: "object",
+        properties: {
+          order_id: {
+            type: "string",
+            description: "The order identifier, e.g. ORD-123.",
+          },
+        },
+        required: ["order_id"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_weather",
+      description: "Fetch current weather for a city.",
+      parameters: {
+        type: "object",
+        properties: {
+          city: { type: "string", description: "City name." },
+          unit: {
+            type: "string",
+            enum: ["celsius", "fahrenheit"],
+            description: "Optional unit override.",
+          },
+        },
+        required: ["city"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "create_calendar_event",
+      description: "Create a calendar event entry.",
+      parameters: {
+        type: "object",
+        properties: {
+          title: { type: "string", description: "Event title." },
+          date: {
+            type: "string",
+            description: "ISO date (YYYY-MM-DD).",
+          },
+          duration_minutes: {
+            type: "number",
+            description: "Event duration in minutes.",
+          },
+          location: {
+            type: "string",
+            description: "Optional location label.",
+          },
+        },
+        required: ["title", "date", "duration_minutes"],
+        additionalProperties: false,
+      },
+    },
+  },
+];
 
 export const BUSINESS_TEMPLATES: Record<
   TemplateKey,
@@ -230,6 +307,69 @@ export const BUSINESS_TEMPLATES: Record<
           "Compare these two sections: do termination and data return obligations conflict? Explain briefly.\n\n5.2 Termination: Either party may terminate for material breach after 30 days' cure notice.\n\n8.1 Upon any termination, Vendor shall return or delete Customer Data within 90 days unless law requires retention.",
         expected_output:
           "Notes termination right vs post-termination data handling; 90-day return window; flags whether breach termination affects 8.1 timing; cautious conclusion; suggests legal review if unclear.",
+      },
+    ],
+  },
+  tool_calling: {
+    label: "Tool-Calling Agent (LangSmith-style)",
+    basePrompt: TOOL_CALLING_BASE,
+    samples: [
+      {
+        kind: "tool_call",
+        input: "What's the weather in Paris right now?",
+        tools: TOOL_CALLING_CATALOG,
+        expected_tool_calls: [
+          { name: "get_weather", arguments: { city: "Paris" } },
+        ],
+        expected_output: "[tool_call] get_weather",
+      },
+      {
+        kind: "tool_call",
+        input:
+          "Create a calendar event named Sync on 2025-09-01 for 30 minutes.",
+        tools: TOOL_CALLING_CATALOG,
+        expected_tool_calls: [
+          {
+            name: "create_calendar_event",
+            arguments: {
+              title: "Sync",
+              date: "2025-09-01",
+              duration_minutes: 30,
+            },
+          },
+        ],
+        expected_output: "[tool_call] create_calendar_event",
+      },
+      {
+        kind: "tool_call",
+        input: "What is 2 + 2?",
+        tools: TOOL_CALLING_CATALOG,
+        expected_tool_calls: [],
+        expected_output: "(no tool)",
+      },
+      {
+        kind: "tool_call",
+        input:
+          "What's the weather in Tokyo in Celsius?",
+        tools: TOOL_CALLING_CATALOG,
+        expected_tool_calls: [
+          {
+            name: "get_weather",
+            arguments: { city: "Tokyo", unit: "celsius" },
+          },
+        ],
+        expected_output: "[tool_call] get_weather",
+      },
+      {
+        kind: "tool_call",
+        input:
+          "First look up order ORD-123, then check weather in London.",
+        tools: TOOL_CALLING_CATALOG,
+        expected_tool_calls: [
+          { name: "search_orders", arguments: { order_id: "ORD-123" } },
+          { name: "get_weather", arguments: { city: "London" } },
+        ],
+        expected_output: "[tool_call] search_orders, get_weather",
       },
     ],
   },
