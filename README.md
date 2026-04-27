@@ -1,53 +1,78 @@
 # LLM Evaluation Suite
 
-Next.js app to run a fixed 10-example benchmark against any OpenRouter model, score outputs with an LLM-as-judge (`@openrouter/agent`), and upload runs to LangSmith.
+## The Problem
+Teams evaluating LLMs for internal tools — support routing, knowledge retrieval, ticket triage — face a recurring problem: there is no fast, structured way to compare model quality across the dimensions that matter for their specific use case. Generic benchmarks measure academic tasks, not business ones. Running ad-hoc comparisons in a playground produces no reproducible record.
+The people most affected are AI platform and tooling teams (like Klaviyo's ARIA team) who need to make confident, defensible decisions about which model to deploy for a given workflow — and then track whether that decision holds up over time as models change.
+Success looks like: a team can define a realistic task, run a structured comparison across 2–3 candidate models in under 10 minutes, get per-dimension quality scores with cost data, and have the results logged to LangSmith for reproducibility. The decision artifact is the output, not just the answer.
 
-## Tool-Calling template
+## The Solution
+LLM Evaluation Suite is a Next.js web app that lets you benchmark any model on a task you define, score outputs with an independent LLM-as-judge across 7 quality dimensions, and upload runs to LangSmith for traceability.
 
-Select **Tool-Calling Agent (LangSmith-style)** under *Business template*. The dataset is **tool-calling rows** only: each row has `input`, a non-empty `tools` array (OpenAI-style `{ type: "function", function: { name, description, parameters } }`), and `expected_tool_calls` as an array of `{ name, arguments }` (use `[]` when no tool should be called). A deterministic scorer produces three metrics (0–100, pass ≥ 70%): **Tool Selection**, **Argument Correctness**, and **Call Trajectory**. The judge model is **not** used for these rows; the test model is called via OpenRouter `chat/completions` with `tools` and `tool_choice: "auto"`, and returned `tool_calls` are compared to the reference.
+### Key Features
+- Model selection from live OpenRouter catalog with editable system prompt
+- Independent evaluator model with configurable metrics: Accuracy, Relevance, Faithfulness, Coherence, Completeness, Conciseness, Tone
+- Streaming run progress with a per-example results table showing metric scores and pass/fail (≥70% threshold)
+- Custom dataset loading via .json or .jsonl file upload (up to 200 rows)
+- Per-example token usage and cost tracking surfaced in the results table
+- LangSmith integration: auto-creates a dataset, project, and run per example with feedback per metric
+- Agentic tool-use evaluation via a mock internal knowledge base (search_knowledge_base, lookup_ticket, get_user_profile)
 
-**Dataset file (JSON / JSONL):** same limits as below (1 MiB file, 200 rows, 8 KiB UTF-8 per logical field). For tool rows, the serialized JSON size of `tools` and of `expected_tool_calls` is checked separately against 8 KiB. Alias: `expected_calls` → `expected_tool_calls`. Mixed text + tool rows in one file are rejected.
+*The evaluation itself is AI-powered: a separate judge model scores each output, enabling automated quality assessment at scale. Without the LLM-as-judge pattern, this would require expensive human review for every run.*
 
-**LangSmith:** uploads use `run_type: "llm"` for tool rows, `inputs: { input, tools }`, `outputs: { tool_calls, messages }` (assistant message with `tool_call` blocks for UI), and `extra.reference_outputs: { expected_tool_calls }`. Feedback keys: `metric_tool_selection`, `metric_tool_args`, `metric_tool_trajectory` (scores 0–1).
+## AI integration
+**Models & APIs**
+- OpenRouter API for model-under-test: abstracts access to GPT-4o, Claude, Mistral, Llama, and others behind a single endpoint
+- @openrouter/auto as the default evaluator judge — can be swapped for any model via the UI
+- LangSmith SDK for run logging, feedback upload, and dataset management
 
-## Custom dataset (JSON / JSONL)
+**Patterns Used**
+- LLM-as-judge: a second model scores each output independently, reducing human review burden
+- Tool use evaluation: the model-under-test can call mock internal tools (knowledge base search, ticket lookup) and is scored on tool selection accuracy and argument quality
+- Configurable metric system: evaluator system prompt is composed dynamically from checkbox selections, giving teams control over what dimensions matter for their task
 
-On the home page you can **load a dataset from a file** (`.json` or `.jsonl`) above the manual row editor. Supported shapes: a top-level array of `{ "input", "expected_output" }` rows, or an object with one of `items`, `dataset`, `data`, `examples`, or `rows` holding that array. Alias keys are normalized (e.g. `prompt` / `question` / `query` → `input`; `answer` / `reference` / `ideal` / `gold` → `expected_output`). JSONL is one JSON object per line. After parsing you get a preview and must choose **Replace current rows** or **Append** before the editor updates. Limits: **1 MiB** file size, **200** rows, **8 KiB** UTF-8 per field (enforced again on `/api/evaluate`). Files must be **UTF-8** (UTF-16 BOM is rejected). Fixtures and parser tests live under `src/lib/__fixtures__/datasets/` and `npm test`.
+**Tradeoffs**
+- Cost vs. coverage: running two LLMs per example (test + judge) doubles inference cost. Surfacing per-run cost in the UI makes this tradeoff visible and manageable.
+- Judge reliability: LLM-as-judge has known biases (verbosity preference, position bias). Mitigation: the judge model is kept independent from the test model and scores are shown per-metric rather than as a single score.
+- Latency: streaming progress (N/10) keeps the UI responsive during longer runs.
 
-## Setup
+**Where AI exceeded expectations:** the judge model proved consistent on Faithfulness and Accuracy with minimal prompt tuning. 
+**Where it falls short:** Conciseness scoring was noisy, often different evaluators scored this variably.
 
-```bash
+## Architecture/Design Decisions
+
+**Stack**
+- Next.js (App Router) — frontend and API routes in one repo, easy Vercel deploy
+- OpenRouter — single API key gives access to the full model catalog, avoiding per-provider key management
+- LangSmith — chosen over custom logging because it provides a purpose-built UI for run comparison, feedback aggregation, and dataset versioning
+
+**Data Flow**
+User selects model + metrics → defines or uploads test dataset → /api/evaluate streams responses example-by-example → each output is scored by the judge model → results table updates live → user triggers LangSmith upload via /api/langsmith.
+
+### Tool Use Layer
+Three mock tools are implemented using LangChain's tool() function with Zod schemas: search_knowledge_base (keyword search over a 30-record JSON store), lookup_ticket (mock CRM lookup by ticket ID), and get_user_profile (mock account data). These simulate the internal APIs an ARIA-style team would actually build against. The evaluator scores tool_selection and argument_quality as additional metrics when tool-use test cases are run.
+
+## AI Coding Tools
+### Built with Cursor
+Cursor accelerated the building process dramatically, setting up the Next.js app in an approachable way, making it easier to design and iterate on further improvements. I used MCPs and plugins to further Cursor's knowledge base:
+- LangChain(MCP): Provided documentation for building out observability
+- Figma(Plugin): Implemented the [Windows 95 UI Kit](https://www.figma.com/community/file/1254078490904184073) for a fun/nostalgic design.
+- Vercel(Plugin): Used for ease of deployment.
+
+**Pros:** With good prompts, I was able to create quickly.
+**Cons:** Using different models yielded different context windows, of course. What I found most annoying was how quickly Opus's context window filled up.
+**Setbacks:** Switching gears from prompt/response evaluation to tool-calling was the hardest transition. The bottleneck was my own knowledge and understanding of the subject. Revisiting the LangSmith docs, researching best practices, and going back and forth with Claude helped me shape project better.
+
+### Researched with Claude
+Claude CI helped me in understanding tool-calling, finding template subjects, and synthesize datasets for evaluation.
+
+## Getting Started / Setup Instructions
+```
+git clone https://github.com/godwinKamau/evaluation-suite
+cd evaluation-suite
 npm install
 cp .env.example .env.local
-# Add OPENROUTER_API_KEY and LANGSMITH_API_KEY (never commit .env.local)
+# Add OPENROUTER_API_KEY and LANGSMITH_API_KEY to .env.local
 npm run dev
 ```
+Open http://localhost:3000. Select a model, select a template, select an evaluator, configure your evaluator metrics, upload or enter test cases, and click Run evaluation.
 
-Open [http://localhost:3000](http://localhost:3000).
-
-## Features
-
-- **Test model**: choose from live OpenRouter models; edit system prompt.
-- **Evaluator model**: independent judge model for **text** datasets; base instructions + checkboxes for metrics with live-composed system prompt preview.
-- **Template Cases**: Choose from template system prompts and datasets (including **Tool-Calling**) or create your own by editing rows.
-- **Run**: streams progress (e.g. 3/10); shows a results table with per-metric % scores and pass/fail (≥70%).
-- **LangSmith**: after a run, upload creates a dataset, a project linked to that dataset, one run per example (inputs, outputs, reference in `extra`), and feedback per metric.
-- **Dataset file upload**: load `.json` / `.jsonl` eval rows (see **Custom dataset** above); same data flows through Run and LangSmith upload as the built-in and template samples.
-
-## Scripts
-
-| Command       | Description        |
-| ------------- | ------------------ |
-| `npm run dev` | Development server |
-| `npm run build` | Production build |
-| `npm run start` | Start production   |
-| `npm test` | Parser, tool scorer, and tool-eval unit tests (`tsx --test`) |
-
-## Environment
-
-| Variable            | Purpose                                      |
-| ------------------- | -------------------------------------------- |
-| `OPENROUTER_API_KEY` | Server-side calls to OpenRouter             |
-| `LANGSMITH_API_KEY`  | Server-side LangSmith upload                |
-
-Keys are read only from the environment (e.g. `.env.local` for local dev), never from client code.
