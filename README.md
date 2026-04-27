@@ -74,6 +74,45 @@ cp .env.example .env.local
 # Add OPENROUTER_API_KEY and LANGSMITH_API_KEY to .env.local
 npm run dev
 ```
-Open http://localhost:3000. Select a model, select a template, select an evaluator, configure your evaluator metrics, upload or enter test cases, and click Run evaluation.
+1. Open http://localhost:3000. 
+2. Select a model. 
+3. Select a template. 
+4. Select an evaluator. 
+5. Configure your evaluator metrics and/or upload or enter test cases.
+6. Click Run evaluation.
 
 **Live Demo:**[https://evaluation-suite.vercel.app/](https://evaluation-suite.vercel.app/)
+
+## Demo
+The fastest way to see the tool in action is to load the included sample dataset and run a comparison between two models — e.g., gpt-4o-mini vs. mistral-7b-instruct — with Accuracy, Faithfulness, and Relevance enabled.
+
+*GPT-4o-Mini, Customer Support and CX Agent:*
+![gpt-4o](gpt.png)
+
+*Mistral-7b-Instruct, Customer Support and CX Agent:*
+![mistral](mistral.png)
+
+## Testing / Error Handling
+Parser tests for dataset loading live under `src/lib/__fixtures__/datasets/` and cover all supported shapes (top-level array, keyed objects with items/dataset/data/examples/rows), alias normalization (prompt/question/query → input; answer/reference/ideal/gold → expected_output), JSONL, and rejection of files over 1 MiB or 200 rows.
+
+Run tests with: npm test
+
+*Error Handling*
+- API failures (OpenRouter rate limits, invalid model IDs) surface as inline error rows in the results table rather than failing the entire run
+- Missing expected_output fields are flagged per row at parse time, not at evaluation time
+- Judge model timeouts fall back to a null score for that metric rather than blocking the run
+- LangSmith upload failures are decoupled from evaluation — a failed upload does not lose run results
+
+## Future Improvements / Stretch Goals
+- Multi-turn evaluation: test cases that span 2–3 conversation turns using LangChain's InMemoryStore, measuring whether the model correctly carries context between turns
+- Real-time cost regression alerts: if a model's cost-per-passing-example exceeds a configurable threshold vs. a baseline run, surface a warning in the UI
+- Side-by-side diff view: for any failing example, show the test model output vs. expected output with the judge's reasoning highlighted
+- Saved run history: persist run metadata locally so teams can compare benchmark results across weeks without requiring LangSmith
+- Webhook trigger: POST a dataset to /api/evaluate programmatically and receive results as JSON, enabling CI integration
+
+## Links
+GitHub: https://github.com/godwinKamau/evaluation-suite
+Live App: https://evaluation-suite.vercel.app/
+
+## Credits
+[Thank you, Yarin Bash, for the Windows 95 Components](https://www.figma.com/community/file/1254078490904184073)
